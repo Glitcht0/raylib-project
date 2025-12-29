@@ -2,7 +2,8 @@
 #include "raylib.h"
 #include "src/Game/state_game.h"
 
-
+#define RLIGHTS_IMPLEMENTATION
+#include "src/rlights.h"
 
 
 
@@ -12,7 +13,7 @@ void principal_loop(){
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     SetConfigFlags(FLAG_VSYNC_HINT);
 
-    InitWindow(800, 600, "Raylib 3D - Exemplo simples");
+    InitWindow(LARGURA_TELA, ALTURA_TELA, "Raylib 3D - Exemplo simples");
     SetTargetFPS(60);
 
     

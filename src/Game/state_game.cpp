@@ -1,9 +1,12 @@
 #include "state_game.h"
 #include <iostream>
-#include "src/config.h"
 
 
 
+
+// ==========================
+//         Constructor
+// ==========================
 StateGame::StateGame() {
     camera.position = (Vector3){ 4.0f, 4.0f, 4.0f };
     camera.target   = (Vector3){ 0.0f, 1.0f, 0.0f };
@@ -17,18 +20,33 @@ StateGame::StateGame() {
     
 }
 
+// =============================================
+//         Executa ao ao entrar no estado
+// =============================================
 void StateGame::onEnter() {
     shader = LoadShader(TextFormat("resources/shaders/glsl%i/lighting.vs", GLSL_VERSION),
         TextFormat("resources/shaders/glsl%i/lighting.fs", GLSL_VERSION));
-    float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
-    SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
+    shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
+    ambientLoc = GetShaderLocation(shader, "ambient");
+    SetShaderValue(shader, ambientLoc, (float[4]){ 0.5f, 0.5f, 0.5f, 1.0f }, SHADER_UNIFORM_VEC4);
+
+    //lights[0] = CreateLight(LIGHT_POINT, (Vector3){ -2, 3, -2 }, Vector3Zero(), YELLOW, shader);
+    //lights[1] = CreateLight(LIGHT_POINT, (Vector3){ 2, 3, 2 }, Vector3Zero(), RED, shader);
+    
+    //lights[3] = CreateLight(LIGHT_POINT, (Vector3){ 2, 3, -2 }, Vector3Zero(), BLUE, shader);
+    lights[0] = CreateLight(LIGHT_POINT, (Vector3){ -10, 5, -7 }, Vector3Zero(), WHITE, shader);
+    lights[2] = CreateLight(LIGHT_POINT, (Vector3){ 15, 3, 7 }, Vector3Zero(), WHITE, shader);
+
 }
 
 void StateGame::onExit() {
     UnloadShader(shader);
 }
 
-// 🎥 Atualiza a câmera com controle orbital e pan
+
+// ===============================================================
+//         🎥 Atualiza a câmera com controle orbital e pan
+// ===============================================================
 void StateGame::update(appstate* currentState) {
     // ---------- ZOOM ----------
     float scroll = GetMouseWheelMove();
@@ -72,6 +90,26 @@ void StateGame::update(appstate* currentState) {
     camera.position.x = camera.target.x + distance * cosf(pitch) * cosf(yaw);
     camera.position.y = camera.target.y + distance * sinf(pitch);
     camera.position.z = camera.target.z + distance * cosf(pitch) * sinf(yaw);
+
+
+    // ---------- Atualiza luzes no shader ----------
+    for (int i = 0; i < MAX_LIGHTS; i++) UpdateLightValues(shader, lights[i]);
+
+
+    float intensity = 1.0f;
+
+    for (int i = 0; i < MAX_LIGHTS; i++){
+        lights[i].color = (Color){
+            (unsigned char)(255 * intensity),
+            (unsigned char)(255 * intensity),
+            (unsigned char)(255 * intensity),255 };
+    }
+    UpdateLightValues(shader, lights[0]);
+    
+    float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
+    SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
+
+
 }
 
 
@@ -80,10 +118,12 @@ void StateGame::update(appstate* currentState) {
 
 
 
-
+// =================================
+//         🖌️ Desenha a cena
+// =================================
 void StateGame::draw() {
     BeginDrawing();
-    ClearBackground(RAYWHITE);
+    ClearBackground(FUNDO);
 
     BeginMode3D(camera);
 
@@ -107,7 +147,7 @@ void StateGame::draw() {
     EndShaderMode();
     EndMode3D();
 
-    DrawText("Cubo 3D simples", 10, 10, 20, DARKGRAY);
+    DrawText("Cubo 3D simples", 10, 10, 20, WHITE);
     DrawFPS(10, 40);
 
     EndDrawing();
@@ -115,6 +155,10 @@ void StateGame::draw() {
 
 
 
+
+// =================================
+//        ✏️ Desenha o Grid
+// =================================
 void StateGame::DrawGridXZ(int size, float step)
 {
     int half = size / 2;
@@ -139,7 +183,7 @@ void StateGame::DrawGridXZ(int size, float step)
 
         float pos = i * step;
 
-        Color color = (i % 10 == 0) ? GRAY : LIGHTGRAY;
+        Color color = (i % 10 == 0) ? COR_GRID2 : COR_GRID;
 
         // paralelas ao X
         DrawLine3D(

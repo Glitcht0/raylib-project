@@ -42,37 +42,51 @@ void main()
     vec3 specular = vec3(0.0);
 
     vec4 tint = colDiffuse*fragColor;
-
+    
     // NOTE: Implement here your fragment shader code
 
-    for (int i = 0; i < MAX_LIGHTS; i++)
-    {
+    for (int i = 0; i < MAX_LIGHTS; i++){
         if (lights[i].enabled == 1)
         {
-            vec3 light = vec3(0.0);
+            vec3 lightDir = vec3(0.0);
 
             if (lights[i].type == LIGHT_DIRECTIONAL)
             {
-                light = -normalize(lights[i].target - lights[i].position);
+                lightDir = -normalize(lights[i].target - lights[i].position);
             }
-
-            if (lights[i].type == LIGHT_POINT)
+            else if (lights[i].type == LIGHT_POINT)
             {
-                light = normalize(lights[i].position - fragPosition);
+                lightDir = normalize(lights[i].position - fragPosition);
             }
 
-            float NdotL = max(dot(normal, light), 0.0);
-            lightDot += lights[i].color.rgb*NdotL;
+            float NdotL = max(dot(normal, lightDir), 0.0);
 
-            float specCo = 0.0;
-            if (NdotL > 0.0) specCo = pow(max(0.0, dot(viewD, reflect(-(light), normal))), 16.0); // 16 refers to shine
-            specular += specCo;
+            // ✅ atenuação por distância (AQUI)
+            float distance = length(lights[i].position - fragPosition);
+            float attenuation = 1.0 / (1.0 + 0.1*distance + 0.01*distance*distance);
+
+            lightDot += lights[i].color.rgb * NdotL * attenuation;
+
+            // especular
+            if (NdotL > 0.0)
+            {
+                float specCo = pow(
+                    max(dot(viewD, reflect(-lightDir, normal)), 0.0),
+                    16.0
+                );
+                specular += specCo * attenuation;
+            }
         }
     }
 
-    finalColor = (texelColor*((tint + vec4(specular, 1.0))*vec4(lightDot, 1.0)));
-    finalColor += texelColor*(ambient/10.0)*tint;
 
-    // Gamma correction
-    finalColor = pow(finalColor, vec4(1.0/2.2));
+
+    vec3 baseColor = tint.rgb;
+
+    vec3 diffuse = baseColor * lightDot;
+    vec3 final = diffuse + specular + ambient.rgb * baseColor;
+
+    finalColor = vec4(final, 1.0);
+
+
 }

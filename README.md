@@ -34,14 +34,18 @@ The template now uses folders for better organizion of the files. So, all the so
 
 
 
+git add .
+git commit -m "Meu primeiro commit"
 
 
 
 
 
+git remote add origin https://github.com/Glitcht0/raylib-project
 
 
-
+git branch -M main         
+git push -u origin main     
 
 
 
