@@ -4,7 +4,8 @@
 #include "raylib.h"
 #include "raymath.h"
 #include "src/config.h"
-
+#include "src/GameObjects/gameObjects.h"
+#include <vector>
 #include "src/rlights.h"
 
 #define FUNDO (Color){ 63, 63, 63, 255 }
@@ -31,6 +32,8 @@ private:
     Shader shader;
     int ambientLoc;
     Light lights[MAX_LIGHTS] = { 0 };
+
+    std::vector<GameObject*> objects;
 
     void DrawGridXZ(int size, float step);
 

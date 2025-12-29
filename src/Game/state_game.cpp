@@ -36,10 +36,22 @@ void StateGame::onEnter() {
     //lights[3] = CreateLight(LIGHT_POINT, (Vector3){ 2, 3, -2 }, Vector3Zero(), BLUE, shader);
     lights[0] = CreateLight(LIGHT_POINT, (Vector3){ -10, 5, -7 }, Vector3Zero(), WHITE, shader);
     lights[2] = CreateLight(LIGHT_POINT, (Vector3){ 15, 3, 7 }, Vector3Zero(), WHITE, shader);
+    
+    objects.push_back(new Cube((Vector3){0, 1, 0}, (Vector3){1, 1, 1}, RED)
+);
+
+
+    
 
 }
 
 void StateGame::onExit() {
+    for (GameObject* obj : objects){
+        delete obj;
+    }   
+        
+
+    objects.clear();
     UnloadShader(shader);
 }
 
@@ -98,17 +110,22 @@ void StateGame::update(appstate* currentState) {
 
     float intensity = 1.0f;
 
-    for (int i = 0; i < MAX_LIGHTS; i++){
-        lights[i].color = (Color){
-            (unsigned char)(255 * intensity),
-            (unsigned char)(255 * intensity),
-            (unsigned char)(255 * intensity),255 };
+    for (int i = 0; i < MAX_LIGHTS; i++){lights[i].color = (Color){
+        (unsigned char)(255 * intensity),
+        (unsigned char)(255 * intensity),
+        (unsigned char)(255 * intensity),255 };
     }
     UpdateLightValues(shader, lights[0]);
     
     float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
     SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
 
+    // ---------- Atualiza os objetos ----------
+    float dt = GetFrameTime();
+    for (GameObject* obj : objects){
+        obj->update(dt);
+    }
+        
 
 }
 
@@ -139,7 +156,11 @@ void StateGame::draw() {
 
 
     // Cubo
-    DrawCube((Vector3){ 0.0f, 1.0f, 0.0f }, 1.0f, 1.0f, 1.0f, RED );
+    for (GameObject* obj : objects){
+        obj->draw();
+    }
+        
+
 
     // Contorno do cubo
     //DrawCubeWires((Vector3){ 0.0f, 1.0f, 0.0f },1.0f, 1.0f, 1.0f, BLACK);

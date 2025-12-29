@@ -35,7 +35,7 @@ The template now uses folders for better organizion of the files. So, all the so
 
 
 git add .
-git commit -m "Meu primeiro commit"
+git commit -m "Meu Segundo commit"
 
 
 

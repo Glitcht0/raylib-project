@@ -367,10 +367,15 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst 
 SRC_DIR = src
 OBJ_DIR = obj
 
+
+SRC = $(call rwildcard,src/,*.cpp)
+
 # Define all object files from source files
-SRC = $(wildcard src/*.cpp) \
-      $(wildcard src/state_machine/*.cpp) \
-      $(wildcard src/Game/*.cpp)
+#SRC = $(wildcard src/*.cpp) \
+#      $(wildcard src/state_machine/*.cpp) \
+ #     $(wildcard src/Game/*.cpp)
+ #     $(wildcard src/GameObjects/*.cpp)
+
 #OBJS = $(SRC:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 OBJS = $(SRC)
 
