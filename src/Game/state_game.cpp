@@ -1,5 +1,5 @@
 #include "state_game.h"
-#include <iostream>
+
 
 
 
@@ -37,8 +37,15 @@ void StateGame::onEnter() {
     lights[0] = CreateLight(LIGHT_POINT, (Vector3){ -10, 5, -7 }, Vector3Zero(), WHITE, shader);
     lights[2] = CreateLight(LIGHT_POINT, (Vector3){ 15, 3, 7 }, Vector3Zero(), WHITE, shader);
     
-    objects.push_back(new Cube((Vector3){0, 1, 0}, (Vector3){1, 1, 1}, RED)
-);
+    objects.push_back(new Cube((Vector3){0, 1, 0}, (Vector3){1, 1, 1}, RED)); //Cubo vermelho
+
+    objects.push_back(new Cube((Vector3){0, -0.01f, 0}, (Vector3){10, 0.01f, 10}, LIGHTGRAY)); // Chão
+
+    uiFont = Carregarfonte();
+    SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR);
+
+
+
 
 
     
@@ -53,80 +60,34 @@ void StateGame::onExit() {
 
     objects.clear();
     UnloadShader(shader);
+
+    UnloadFont(uiFont);
 }
 
 
+
 // ===============================================================
-//         🎥 Atualiza a câmera com controle orbital e pan
+//         🗿 Atualiza a câmera, objetos, controles...
 // ===============================================================
 void StateGame::update(appstate* currentState) {
-    // ---------- ZOOM ----------
-    float scroll = GetMouseWheelMove();
-    if (scroll != 0.0f) {
-        distance *= (1.0f - scroll * 0.1f);
-        distance = Clamp(distance, 0.5f, 50.0f);
-    }
 
+    // -------------------- Controles edit viewport --------------------
     Vector2 delta = GetMouseDelta();
-
-    // ---------- PAN (SHIFT + BOTÃO DO MEIO) ----------
-    if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE) &&
-        (IsKeyDown(KEY_LEFT_SHIFT) || IsKeyDown(KEY_RIGHT_SHIFT))) {
-
-        float panSpeed = 0.002f * distance; // proporcional à distância
-
-        Vector3 forward = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
-        Vector3 right   = Vector3Normalize(Vector3CrossProduct(forward, camera.up));
-        Vector3 up      = Vector3CrossProduct(right, forward);
-
-        Vector3 pan =
-            Vector3Add(
-                Vector3Scale(right, -delta.x * panSpeed),
-                Vector3Scale(up,    delta.y * panSpeed)
-            );
-
-        camera.target = Vector3Add(camera.target, pan);
-    }
-
-    // ---------- ORBIT (BOTÃO DO MEIO SEM SHIFT) ----------
-    else if (IsMouseButtonDown(MOUSE_BUTTON_MIDDLE)) {
-        float sensitivity = 0.005f;
-
-        yaw   += delta.x * sensitivity;
-        pitch += delta.y * sensitivity;
-
-        pitch = Clamp(pitch, -PI/2 + 0.01f, PI/2 - 0.01f);
-    }
-
-    // ---------- CONVERSÃO ESFÉRICA → CARTESIANA ----------
-    camera.position.x = camera.target.x + distance * cosf(pitch) * cosf(yaw);
-    camera.position.y = camera.target.y + distance * sinf(pitch);
-    camera.position.z = camera.target.z + distance * cosf(pitch) * sinf(yaw);
-
-
-    // ---------- Atualiza luzes no shader ----------
-    for (int i = 0; i < MAX_LIGHTS; i++) UpdateLightValues(shader, lights[i]);
-
-
-    float intensity = 1.0f;
-
-    for (int i = 0; i < MAX_LIGHTS; i++){lights[i].color = (Color){
-        (unsigned char)(255 * intensity),
-        (unsigned char)(255 * intensity),
-        (unsigned char)(255 * intensity),255 };
-    }
-    UpdateLightValues(shader, lights[0]);
     
-    float cameraPos[3] = { camera.position.x, camera.position.y, camera.position.z };
-    SetShaderValue(shader, shader.locs[SHADER_LOC_VECTOR_VIEW], cameraPos, SHADER_UNIFORM_VEC3);
+    handleScrollMouse(); //ZOOM
+    handleMiddleMouse(delta); // PAN (SHIFT + BOTÃO DO MEIO) & ORBIT (BOTÃO DO MEIO SEM SHIFT)
+    
+    handleInput(); // Entrada de teclado para mudar modos e selecionar objetos
+    mesaEd.update(selectedObject, transformMode); // Atualiza a mesa de edição
+    handleTransform(); // Manipula transformação do objeto ativo
+    
+    updateOBBSelection(); // Seleção de objetos
+       
+    
 
-    // ---------- Atualiza os objetos ----------
-    float dt = GetFrameTime();
-    for (GameObject* obj : objects){
-        obj->update(dt);
-    }
-        
-
+    updateCamera(); // Atualiza posição da câmera com base em yaw, pitch e distância
+    updateLights(); // Atualiza luzes no shader
+    updateObjects(); // Atualiza os objetos
 }
 
 
@@ -146,13 +107,9 @@ void StateGame::draw() {
 
     DrawGridXZ(40, 1.0f);
 
-
-    
-
     BeginShaderMode(shader);
 
-    // Chão
-    DrawCube((Vector3){0,-0.01f,0}, 10, 0.01f, 10, LIGHTGRAY);
+    
 
 
     // Cubo
@@ -161,15 +118,14 @@ void StateGame::draw() {
     }
         
 
-
-    // Contorno do cubo
-    //DrawCubeWires((Vector3){ 0.0f, 1.0f, 0.0f },1.0f, 1.0f, 1.0f, BLACK);
-    
     EndShaderMode();
     EndMode3D();
 
-    DrawText("Cubo 3D simples", 10, 10, 20, WHITE);
+    DrawText("Glit Engine", 10, 10, 20, WHITE);
+
+
     DrawFPS(10, 40);
+    mesaEd.draw(selectedObject, transformMode, uiFont);
 
     EndDrawing();
 }

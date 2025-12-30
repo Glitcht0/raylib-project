@@ -7,10 +7,14 @@
 #include "src/GameObjects/gameObjects.h"
 #include <vector>
 #include "src/rlights.h"
+#include "src/Ui/Ui.h"
+#include "src/Utils/Colisores.h"
 
 #define FUNDO (Color){ 63, 63, 63, 255 }
 #define COR_GRID (Color){ 80, 80, 80, 255 }
 #define COR_GRID2 (Color){ 95, 95, 95, 255 }
+
+
 
 
 class StateGame : public State {
@@ -22,6 +26,8 @@ public:
 
     void update(appstate* currentState) override;
     void draw() override;
+    Font uiFont;
+
 
 private:
     Camera3D camera = { 0 };
@@ -35,6 +41,40 @@ private:
 
     std::vector<GameObject*> objects;
 
+    GameMode transformMode = GameMode::EDIT;
+
+    edit_table mesaEd;
     void DrawGridXZ(int size, float step);
+
+
+    void handleMiddleMouse(Vector2 delta);
+    void handleScrollMouse();
+    void handleInput();
+    void handleTransform();
+    void updateOBBSelection();
+
+
+    void updateCamera();
+
+    void updateLights();
+    void updateObjects();
+
+    //Dados pra movimentação de objetos
+    Vector3 moveStartMouseWorld; //posição no mundo do objeto
+    Vector3 moveStartObjectPos; //posição inicial do objeto
+    Vector3 moveStartObjectRotation; // rotação inicial do objeto
+
+    Vector2 prevMousePos = { 0,0 };
+    GameObject* activeObject = nullptr;
+    GameObject* selectedObject = nullptr;
+    bool lockAxisY = false;
+
+    Vector3 startRotation; // rotação inicial do objeto
+    bool axisLockActive = false; // se alguma tecla de travamento está sendo usada
+    
+    
+
+    Vector3 GetMouseWorldPosCameraPlane();
+
 
 };

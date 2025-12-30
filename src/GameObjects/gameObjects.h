@@ -1,9 +1,14 @@
 #pragma once
 #include "raylib.h"
+#include "rlgl.h"
+
 
 class GameObject{
 public:
     Vector3 position;
+    Vector3 rotation;
+
+    bool is_selected = false;
 
     virtual ~GameObject(){}
     virtual void update(float dt) {}
