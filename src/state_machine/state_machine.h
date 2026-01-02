@@ -11,4 +11,9 @@ enum appstate {
 
 
 
+
+
+
 void principal_loop();
+
+void mensagemBox(appstate *currentState);

@@ -5,6 +5,7 @@
 #include <cstring>   // strlen
 #include <cstdio>    // snprintf
 #include <cstdlib>   // atof
+#include "src/i18n/i18n.h"
 
 
 enum class UIField {

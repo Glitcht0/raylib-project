@@ -35,8 +35,8 @@ The template now uses folders for better organizion of the files. So, all the so
 
 
 git add .
-git commit -m "Virou Blender"
-
+git commit -m "Mover e girar"
+git push -u origin main     
 
 
 
@@ -50,7 +50,9 @@ git push -u origin main
 
 
 
-
+pesquisa por transformação de imagens e rotação por matrizes
+matrizes Ortonormais
+decomposição de valores singulares
 
 
 
@@ -291,3 +293,14 @@ EndMode3D();
 DrawText("UI", 10, 10, 20, WHITE);
 
 EndDrawing();
+
+
+
+
+
+
+
+
+
+
+

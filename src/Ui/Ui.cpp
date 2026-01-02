@@ -62,7 +62,7 @@ void edit_table::draw(GameObject* activeObject, GameMode mode, Font uiFont){
     float x = position.x + 10;
     float y = position.y + 10;
 
-    DrawTextEx(uiFont, "Barra de edição", (Vector2){ x, y }, 18, 1, WHITE);
+    DrawTextEx(uiFont, T("EDIT_BAR"), (Vector2){ x, y }, 18, 1, WHITE);
 
     if (!activeObject) return;
 

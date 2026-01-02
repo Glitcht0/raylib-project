@@ -39,3 +39,64 @@ void Cube::draw(){
 
     rlPopMatrix();
 }
+
+// ====================
+//     📷 Camera
+// ====================
+CameraObject::CameraObject(Vector3 pos, Vector3 target, Vector3 up, float fovy, int projection) {
+    
+    this->position = pos;      // posição do GameObject
+    this->target = target;     // alvo para orbitar
+    this->distance = Vector3Distance(pos, target); // distância inicial
+    this->yaw = 20.0f * DEG2RAD;
+    this->pitch = 30.0f * DEG2RAD;
+
+    initialPosition.x = target.x + distance * cosf(pitch) * cosf(yaw);
+    initialPosition.y = target.y + distance * sinf(pitch);
+    initialPosition.z = target.z + distance * cosf(pitch) * sinf(yaw);
+
+    position = initialPosition;
+    
+    cam.position = position;
+    cam.target = target;
+    cam.up = up;
+    this->fovy = fovy;
+    this->projection = projection;
+    cam.fovy = fovy;
+    cam.projection = projection;
+
+    
+    initialTarget = target;
+}
+
+
+
+void CameraObject::update(float dt) {
+    // Converte yaw/pitch/distance para posição da câmera
+    cam.position.x = target.x + distance * cosf(pitch) * cosf(yaw);
+    cam.position.y = target.y + distance * sinf(pitch);
+    cam.position.z = target.z + distance * cosf(pitch) * sinf(yaw);
+
+    // Sincroniza posição do GameObject, caso queira manipulá-la visualmente
+    position = cam.position;
+
+    cam.target = target;
+    cam.fovy = fovy;
+    cam.projection = projection;
+
+
+}
+
+void CameraObject::draw() {
+    
+    Vector3 direction = Vector3Normalize(Vector3Subtract(initialTarget, initialPosition)); // 1. Calcula a direção (Vetor unitário apontando para o alvo)
+
+    Vector3 endPoint = Vector3Add(initialPosition, Vector3Scale(direction, 0.5f)); // 2. Define um ponto um pouco à frente para ser a "ponta" da câmera
+
+    DrawCylinderEx(initialPosition, endPoint, 0.05f, 0.3f, 4, DARKGRAY); // 3. Desenha um cone que conecta a posição inicial ao ponto à frente
+    
+    DrawSphere(initialPosition, 0.1f, DARKGRAY); // (Opcional) Uma esfera pequena na base para marcar a posição exata
+    
+    DrawLine3D(initialPosition, initialTarget, Fade(GREEN, 0.5f));  // (Opcional) Uma linha até o alvo real para debug
+    
+}

@@ -8,12 +8,8 @@
 //         Constructor
 // ==========================
 StateGame::StateGame() {
-    camera.position = (Vector3){ 4.0f, 4.0f, 4.0f };
-    camera.target   = (Vector3){ 0.0f, 1.0f, 0.0f };
-    camera.up       = (Vector3){ 0.0f, 1.0f, 0.0f };
-    camera.fovy     = 45.0f;
-    camera.projection = CAMERA_PERSPECTIVE;
-
+    
+    
     distance = 6.0f;
     yaw = 135.0f * DEG2RAD;
     pitch = 30.0f * DEG2RAD;
@@ -42,9 +38,12 @@ void StateGame::onEnter() {
     objects.push_back(new Cube((Vector3){0, -0.01f, 0}, (Vector3){10, 0.01f, 10}, LIGHTGRAY)); // Chão
 
     uiFont = Carregarfonte();
-    SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR);
+    SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR); // Suaviza a fonte
 
+    cameraObj = new CameraObject({4,4,4}, {0,1,0}, {0,1,0});
 
+    playerObj = new Player(cameraObj);
+    playerObj->position = { 0, 0, 0 };
 
 
 
@@ -52,14 +51,26 @@ void StateGame::onEnter() {
 
 }
 
+
+// =============================================
+//         Executa ao ao Sair no estado
+// =============================================
 void StateGame::onExit() {
     for (GameObject* obj : objects){
         delete obj;
     }   
         
+    delete playerObj;
+    playerObj = nullptr;
+
+    delete cameraObj;
+    cameraObj = nullptr;
+
 
     objects.clear();
     UnloadShader(shader);
+
+    
 
     UnloadFont(uiFont);
 }
@@ -78,14 +89,15 @@ void StateGame::update(appstate* currentState) {
     handleMiddleMouse(delta); // PAN (SHIFT + BOTÃO DO MEIO) & ORBIT (BOTÃO DO MEIO SEM SHIFT)
     
     handleInput(); // Entrada de teclado para mudar modos e selecionar objetos
+    
     mesaEd.update(selectedObject, transformMode); // Atualiza a mesa de edição
     handleTransform(); // Manipula transformação do objeto ativo
     
     updateOBBSelection(); // Seleção de objetos
        
     
-
-    updateCamera(); // Atualiza posição da câmera com base em yaw, pitch e distância
+    cameraObj->update(GetFrameTime());
+    playerObj->update(GetFrameTime());
     updateLights(); // Atualiza luzes no shader
     updateObjects(); // Atualiza os objetos
 }
@@ -103,7 +115,7 @@ void StateGame::draw() {
     BeginDrawing();
     ClearBackground(FUNDO);
 
-    BeginMode3D(camera);
+    BeginMode3D(cameraObj->cam);
 
     DrawGridXZ(40, 1.0f);
 
@@ -116,12 +128,16 @@ void StateGame::draw() {
     for (GameObject* obj : objects){
         obj->draw();
     }
-        
+    
+    cameraObj->draw();
+    
 
     EndShaderMode();
+    playerObj->draw();
     EndMode3D();
 
     DrawText("Glit Engine", 10, 10, 20, WHITE);
+
 
 
     DrawFPS(10, 40);
@@ -132,49 +148,4 @@ void StateGame::draw() {
 
 
 
-
-// =================================
-//        ✏️ Desenha o Grid
-// =================================
-void StateGame::DrawGridXZ(int size, float step)
-{
-    int half = size / 2;
-
-    // ---------- EIXOS (UMA VEZ SÓ) ----------
-    DrawLine3D(
-        (Vector3){ -half*step, 0, 0 },
-        (Vector3){  half*step, 0, 0 },
-        RED     // eixo X
-    );
-
-    DrawLine3D(
-        (Vector3){ 0, 0, -half*step },
-        (Vector3){ 0, 0,  half*step },
-        BLUE    // eixo Z
-    );
-
-    // ---------- GRID ----------
-    for (int i = -half; i <= half; i++)
-    {
-        if (i == 0) continue; // NÃO redesenha em cima dos eixos
-
-        float pos = i * step;
-
-        Color color = (i % 10 == 0) ? COR_GRID2 : COR_GRID;
-
-        // paralelas ao X
-        DrawLine3D(
-            (Vector3){ -half*step, 0, pos },
-            (Vector3){  half*step, 0, pos },
-            color
-        );
-
-        // paralelas ao Z
-        DrawLine3D(
-            (Vector3){ pos, 0, -half*step },
-            (Vector3){ pos, 0,  half*step },
-            color
-        );
-    }
-}
 

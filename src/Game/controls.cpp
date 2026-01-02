@@ -99,11 +99,11 @@ void StateGame::handleTransform() {
 // Obtém a posição no mundo do mouse projetada no plano XZ (Y=0)
 // ===============================================================
 Vector3 StateGame::GetMouseWorldPosCameraPlane() {
-    Ray ray = GetMouseRay(GetMousePosition(), camera);
+    Ray ray = GetMouseRay(GetMousePosition(), cameraObj->cam);
 
     Vector3 planePoint  = moveStartObjectPos;
     // plano perpendicular à câmera (como o Blender faz)
-    Vector3 planeNormal = Vector3Normalize(Vector3Subtract(camera.target, camera.position));
+    Vector3 planeNormal = Vector3Normalize(Vector3Subtract(cameraObj->cam.target, cameraObj->cam.position));
 
     Vector3 hit = moveStartObjectPos;
     RayPlaneIntersection(ray, planePoint, planeNormal, &hit);

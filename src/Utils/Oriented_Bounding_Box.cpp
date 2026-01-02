@@ -5,11 +5,7 @@
 bool RayIntersectsOBB(const Ray& ray, const Vector3& position, const Vector3& rotationDeg, const Vector3& size) {
     Matrix mat =
         MatrixMultiply(
-            MatrixRotateXYZ((Vector3){
-                rotationDeg.x * DEG2RAD,
-                rotationDeg.y * DEG2RAD,
-                rotationDeg.z * DEG2RAD
-            }),
+            MatrixRotateXYZ((Vector3){ rotationDeg.x * DEG2RAD, rotationDeg.y * DEG2RAD, rotationDeg.z * DEG2RAD }),
             MatrixTranslate(position.x, position.y, position.z)
         );
 

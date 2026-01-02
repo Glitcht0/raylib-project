@@ -30,7 +30,8 @@ public:
 
 
 private:
-    Camera3D camera = { 0 };
+    CameraObject* cameraObj;
+    Player* playerObj;
 
     float yaw   = 0.0f; //rotação horizontal
     float pitch = 0.0f; //rotação vertical
