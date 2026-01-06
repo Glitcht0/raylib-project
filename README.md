@@ -35,7 +35,7 @@ The template now uses folders for better organizion of the files. So, all the so
 
 
 git add .
-git commit -m "Mover e girar"
+git commit -m "furry"
 git push -u origin main     
 
 

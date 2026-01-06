@@ -2,6 +2,16 @@
 #include "raylib.h"
 #include "rlgl.h"
 #include "raymath.h"
+#include <vector> 
+
+enum PlayerState {
+    IDLE_FRONT,
+    WALK_RIGHT,
+    WALK_LEFT,
+    RUN,
+    ATTACK,
+    INTERACT
+};
 
 class GameObject{
 public:
@@ -28,15 +38,11 @@ public:
     void update(float dt) override;
 
     void draw() override;
+
+    BoundingBox GetBoundingBox();
 };
 
-enum PlayerState {
-    IDLE,
-    WALK,
-    RUN,
-    ATTACK,
-    INTERACT
-};
+
 
 
 
@@ -58,15 +64,20 @@ public:
 
     CameraObject(Vector3 pos, Vector3 target, Vector3 up, float fovy = 45.0f, int projection = CAMERA_PERSPECTIVE);
     
-    float test1 = 0;
-    float teste2 = 0;
-    float timeAccumulator = 0.0f;
+
 
     void update(float dt) override;
     void draw() override;
 };
 
 
+
+// No header (Player.h ou gameObjects.h)
+struct SpriteAnimation {
+    Texture2D* frames; // Ponteiro para o array de texturas
+    int frameCount;    // Quantos frames essa animação tem
+    float fps;         // Velocidade específica dessa animação
+};
 
 
 class Player : public GameObject {
@@ -78,13 +89,10 @@ public:
     PlayerState state;
 
     CameraObject* cameraObj;
+    std::vector<GameObject*>* worldObjects = nullptr;
 
-    Texture2D texture;
 
-    // animação depois
-    float animTimer;
-    int currentFrame;
-
+    BoundingBox GetBoundingBox(Vector3 pos);
     Player(CameraObject* camera);
 
     ~Player();
@@ -93,5 +101,29 @@ public:
 
     void update(float dt) override;
     void draw() override;
+    void SetAnimation(SpriteAnimation* newAnim);
+
+    void DrawSprite3DInclinado( Texture2D texture, Rectangle source, Vector3 position, Vector2 size, float rotY, float tiltX, Color tint);
+
+private:
+    Texture2D* texIdleFront;
+    Texture2D* texRunLeft;
+    Texture2D* texRunRight;
+
+    // Nossas definições de animação
+    SpriteAnimation animIdleFront;
+    SpriteAnimation animRunLeft;
+    SpriteAnimation animRunRight;
+
+    // Ponteiro para a animação atual
+    SpriteAnimation* currentAnim = nullptr;
+
+    float animTimer = 0.0f;
+    int currentFrame = 0;
+
+    void HandleMovement(Vector2 input, float dt);
+    void UpdateAnimationState(Vector2 input);
+    void TickAnimation(float dt);
+
 };
 

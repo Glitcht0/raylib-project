@@ -22,3 +22,4 @@ enum class GameMode {
 
 #define COR_MESA (Color){ 45, 45, 45, 255 }
 #define COR_INPUT (Color){ 84, 84, 84, 255 }
+#define COR_GRAMA (Color){ 244, 216, 149, 255 }

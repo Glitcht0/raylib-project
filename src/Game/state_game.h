@@ -9,10 +9,12 @@
 #include "src/rlights.h"
 #include "src/Ui/Ui.h"
 #include "src/Utils/Colisores.h"
+#include "src/Mundo/mundo.h"
 
 #define FUNDO (Color){ 63, 63, 63, 255 }
 #define COR_GRID (Color){ 80, 80, 80, 255 }
 #define COR_GRID2 (Color){ 95, 95, 95, 255 }
+
 
 
 
@@ -30,21 +32,26 @@ public:
 
 
 private:
+    GameMode transformMode = GameMode::GAME;
+
+    
     CameraObject* cameraObj;
     Player* playerObj;
+    World world;
+    edit_table* mesaEd;
+    Shader shader;
+    Light lights[MAX_LIGHTS] = { 0 };
+    
+
+    std::vector<GameObject*> objects; // todos os objetos na cena
+
+    int ambientLoc;
 
     float yaw   = 0.0f; //rotação horizontal
     float pitch = 0.0f; //rotação vertical
     float distance = 6.0f;
-    Shader shader;
-    int ambientLoc;
-    Light lights[MAX_LIGHTS] = { 0 };
 
-    std::vector<GameObject*> objects;
-
-    GameMode transformMode = GameMode::EDIT;
-
-    edit_table mesaEd;
+    
     void DrawGridXZ(int size, float step);
 
 
@@ -52,13 +59,13 @@ private:
     void handleScrollMouse();
     void handleInput();
     void handleTransform();
+
+    void updateAll();
     void updateOBBSelection();
-
-
     void updateCamera();
-
     void updateLights();
     void updateObjects();
+
 
     //Dados pra movimentação de objetos
     Vector3 moveStartMouseWorld; //posição no mundo do objeto

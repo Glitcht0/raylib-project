@@ -6,6 +6,9 @@
 #include <cstdio>    // snprintf
 #include <cstdlib>   // atof
 #include "src/i18n/i18n.h"
+#include "src/Mundo/mundo.h"
+
+void DrawMiniMap(World* world, Vector2 pos, float size);
 
 
 enum class UIField {
@@ -41,7 +44,7 @@ class edit_table{
 private:
     Vector2 position;
     Vector2 size;
-    float largura = 200, altura = 400;
+    float largura = 200, altura = 500;
 
 
     floatInput posX{"X:"};
@@ -56,14 +59,18 @@ private:
     Rectangle rectPosX;
     Rectangle rectPosY;
     Rectangle rectPosZ;
+    
+    
 
 
     bool uiCapturedMouse = false;
+
+    World* world;
     
     
 
 public:
-    edit_table();
+    edit_table(World* w);
     void update(GameObject* activeObject, GameMode mode);
     UIField focusedField = UIField::NONE;
 

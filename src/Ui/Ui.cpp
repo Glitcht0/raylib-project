@@ -1,7 +1,8 @@
 #include "Ui.h"
 
 
-edit_table::edit_table(){
+edit_table::edit_table(World* w){
+    world = w;
     position = Vector2{ LARGURA_TELA - largura -5, 5 };
     size = Vector2{ largura, altura };
 
@@ -84,6 +85,14 @@ void edit_table::draw(GameObject* activeObject, GameMode mode, Font uiFont){
     rotX.draw(uiFont);
     rotY.draw(uiFont);
     rotZ.draw(uiFont);
+
+    // --- MINIMAPA ---
+    float mapSize = largura - 20;
+    Vector2 mapPos = { position.x + 10, position.y + altura - mapSize - 10};
+
+    DrawTextEx(uiFont, "MiniMap",  (Vector2){ mapPos.x, mapPos.y - 18 }, 14, 1, WHITE);
+
+    DrawMiniMap(world, mapPos, mapSize);
   
 
     //DrawRectangleV(Vector2{x-2, y-1}, Vector2{ largura - 20, 15}, COR_INPUT);
@@ -107,12 +116,10 @@ void floatInput::draw(Font font) {
 
     snprintf(finalTxt, sizeof(finalTxt), "%s %s", label, valueTxt);
 
-    DrawTextEx(
-        font,
-        finalTxt,
-        { rect.x + 4, rect.y + 2 },
-        14, 1, WHITE
-    );
+    DrawTextEx( font, finalTxt, { rect.x + 4, rect.y + 2 }, 14, 1, WHITE );
+
+
+
 }
 
 
@@ -173,4 +180,41 @@ void floatInput::bind(float* v) {
         value = v;
         if (value) snprintf(buffer, sizeof(buffer), "%.2f", *value);
     }
+}
+
+
+
+
+void DrawMiniMap(World* world, Vector2 pos, float size) {
+    if (!world) return;
+
+    
+    int h = WORLD_H;
+    int w = WORLD_W;
+
+    
+
+    float tileSize = size / (float)w; // mapa quadrado
+
+    for (int z = 0; z < h; z++) {
+        for (int x = 0; x < w; x++) {
+
+            Color c = DARKGRAY;
+
+            switch (world->world[z][x].type) {
+                case TILE_GRASS: c = GREEN; break;
+                case TILE_DIRT:  c = BROWN; break;
+                case TILE_WATER: c = BLUE;  break;
+            }
+
+            int dx = z;
+            int dz = w - 1 - x;
+
+            DrawRectangle( pos.x + dx * tileSize, pos.y + dz * tileSize, tileSize, tileSize, c );
+
+        }
+    }
+
+    // borda
+    DrawRectangleLines(pos.x, pos.y, size, size, WHITE);
 }
