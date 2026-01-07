@@ -1,4 +1,4 @@
-#include "state_game.h"
+#include "src/Game/state_game.h"
 
 
 
@@ -44,9 +44,9 @@ void StateGame::onEnter() {
     objects.push_back(new Cube((Vector3){0, 1, 2}, (Vector3){1, 1, 1}, RED)); //Cubo vermelho
     objects.push_back(new Cube((Vector3){0, -0.01f, 0}, (Vector3){10, 0.01f, 10}, LIGHTGRAY)); // Chão
 
-    playerObj = new Player(cameraObj);
+    playerObj = new Player(cameraObj, &world);
     playerObj->worldObjects = &objects;
-    playerObj->position = { 0, 0, 0 };
+    playerObj->position = world.Get_Spaw(0.7f);
 
 
 
@@ -138,6 +138,8 @@ void StateGame::draw() {
 
     DrawFPS(10, 40);
     mesaEd->draw(selectedObject, transformMode, uiFont);
+
+    
 
     EndDrawing();
 

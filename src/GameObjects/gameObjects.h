@@ -3,6 +3,7 @@
 #include "rlgl.h"
 #include "raymath.h"
 #include <vector> 
+#include "src/Mundo/mundo.h"
 
 enum PlayerState {
     IDLE_FRONT,
@@ -93,7 +94,7 @@ public:
 
 
     BoundingBox GetBoundingBox(Vector3 pos);
-    Player(CameraObject* camera);
+    Player(CameraObject* camera, World* w);
 
     ~Player();
 
@@ -117,6 +118,8 @@ private:
 
     // Ponteiro para a animação atual
     SpriteAnimation* currentAnim = nullptr;
+
+    World* world;
 
     float animTimer = 0.0f;
     int currentFrame = 0;

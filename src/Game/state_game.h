@@ -11,6 +11,8 @@
 #include "src/Utils/Colisores.h"
 #include "src/Mundo/mundo.h"
 
+
+
 #define FUNDO (Color){ 63, 63, 63, 255 }
 #define COR_GRID (Color){ 80, 80, 80, 255 }
 #define COR_GRID2 (Color){ 95, 95, 95, 255 }

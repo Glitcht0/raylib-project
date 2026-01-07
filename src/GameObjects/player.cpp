@@ -2,7 +2,9 @@
 #include <iostream>
 
 
-Player::Player(CameraObject* camera) {
+Player::Player(CameraObject* camera, World* w) {
+
+    world = w;
 
     cameraObj = camera;
     position = { 0, 0, 0 };
@@ -210,6 +212,7 @@ void Player::HandleMovement(Vector2 input, float dt) {
                     blockedX = true;
                     break;
                 }
+                
             }
         }
 
@@ -223,8 +226,16 @@ void Player::HandleMovement(Vector2 input, float dt) {
                     blockedZ = true;
                     break;
                 }
+                
             }
         }
+        //Verifica Tile Bloqueado
+        if (!blockedX && !world->Get_walkTileWorld(nextPosX, 0.3f))
+            blockedX = true;
+
+        if (!blockedZ && !world->Get_walkTileWorld(nextPosZ, 0.3f))
+            blockedZ = true;
+
 
         if (!blockedX) position.x = nextPosX.x;
         if (!blockedZ) position.z = nextPosZ.z;

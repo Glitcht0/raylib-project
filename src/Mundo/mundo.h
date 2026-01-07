@@ -32,6 +32,10 @@ public:
     void draw();
     Tile world[WORLD_H][WORLD_W];
 
+    bool Get_walkTileWorld(Vector3 pos, float halfSize);
+    Vector3 Get_Spaw(float halfSize);
+    
+
     
 
 private:
