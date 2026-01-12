@@ -1,14 +1,14 @@
-#include "state_machine.h"
+#include "src/core/state_machine.h"
 #include "raylib.h"
 #include "src/Game/state_game.h"
-#include "src/i18n/i18n.h"
+#include "src/engine/i18n/i18n.h"
 
 #define RLIGHTS_IMPLEMENTATION
-#include "src/rlights.h"
+#include "libs/rlights.h"
 
 
 #define RAYGUI_IMPLEMENTATION
-#include "src/raygui.h"
+#include "libs/raygui.h"
 #include "resources/style/style_amber.h"
 
 

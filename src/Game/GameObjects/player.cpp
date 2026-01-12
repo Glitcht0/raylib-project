@@ -102,8 +102,12 @@ void Player::update(float dt) {
 void Player::draw() {
     if (!currentAnim) return;
 
-    DrawBoundingBox(GetBoundingBox(position), GREEN);
+    //DrawBoundingBox(GetBoundingBoxAt(position), GREEN);
 
+    float radius = playerRadius;
+    float height = 1.3f;
+
+    DrawCylinderWires(position, radius, radius, height, 16, GREEN);
 
     Texture2D tex = currentAnim->frames[currentFrame];
     float size = 1.3f;
@@ -156,7 +160,11 @@ void Player::DrawSprite3DInclinado( Texture2D texture, Rectangle source, Vector3
 
 
 
-BoundingBox Player::GetBoundingBox(Vector3 pos) {
+BoundingBox Player::GetBoundingBox() const {
+    return GetBoundingBoxAt(position);
+}
+
+BoundingBox Player::GetBoundingBoxAt(Vector3 pos) const {
     BoundingBox box;
     box.min = { pos.x - 0.3f, pos.y, pos.z - 0.3f };
     box.max = { pos.x + 0.3f, pos.y + 1.3f, pos.z + 0.3f };
@@ -164,7 +172,15 @@ BoundingBox Player::GetBoundingBox(Vector3 pos) {
 }
 
 
+bool Player::CheckCollisionCircleAABB_XZ( Vector3 center, float radius,const BoundingBox& box){
+    float closestX = Clamp(center.x, box.min.x, box.max.x);
+    float closestZ = Clamp(center.z, box.min.z, box.max.z);
 
+    float dx = center.x - closestX;
+    float dz = center.z - closestZ;
+
+    return (dx*dx + dz*dz) <= (radius * radius);
+}
 
 
 
@@ -190,45 +206,43 @@ void Player::HandleMovement(Vector2 input, float dt) {
         //Novas possiões, pro x e pro Z
         Vector3 nextPosX = position;
         nextPosX.x += move.x * speed * dt;
-
-        BoundingBox playerBoxX = GetBoundingBox(nextPosX);
         bool blockedX = false;
 
         Vector3 nextPosZ = position;
         nextPosZ.z += move.z * speed * dt;
-
-        BoundingBox playerBoxZ = GetBoundingBox(nextPosZ);
         bool blockedZ = false;
 
 
         // === COLISÃO ===
-        // Checa colisão X
+        // Checa colisão X e Z
         if (worldObjects) {
             for (GameObject* obj : *worldObjects) {
-                Cube* cube = dynamic_cast<Cube*>(obj);
-                if (!cube) continue;
+                if (!obj->HasCollision()) continue;
 
-                if (CheckCollisionBoxes(playerBoxX, cube->GetBoundingBox())) {
-                    blockedX = true;
-                    break;
+                BoundingBox box = obj->GetBoundingBox();
+
+                if (!blockedX) {
+                    Vector3 testPos = position;
+                    testPos.x = nextPosX.x;
+
+                    if (CheckCollisionCircleAABB_XZ(testPos, playerRadius, box))
+                        blockedX = true;
                 }
-                
+
+                if (!blockedZ) {
+                    Vector3 testPos = position;
+                    testPos.z = nextPosZ.z;
+
+                    if (CheckCollisionCircleAABB_XZ(testPos, playerRadius, box))
+                        blockedZ = true;
+                }
+
+                if (blockedX && blockedZ)
+                    break;
             }
         }
 
-        // Checa colisão Z
-        if (worldObjects) {
-            for (GameObject* obj : *worldObjects) {
-                Cube* cube = dynamic_cast<Cube*>(obj);
-                if (!cube) continue;
 
-                if (CheckCollisionBoxes(playerBoxZ, cube->GetBoundingBox())) {
-                    blockedZ = true;
-                    break;
-                }
-                
-            }
-        }
         //Verifica Tile Bloqueado
         if (!blockedX && !world->Get_walkTileWorld(nextPosX, 0.3f))
             blockedX = true;

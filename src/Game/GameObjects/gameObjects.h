@@ -3,7 +3,7 @@
 #include "rlgl.h"
 #include "raymath.h"
 #include <vector> 
-#include "src/Mundo/mundo.h"
+#include "src/Game/Mundo/mundo.h"
 
 enum PlayerState {
     IDLE_FRONT,
@@ -25,6 +25,8 @@ public:
     virtual ~GameObject(){}
     virtual void update(float dt) {}
     virtual void draw() = 0;
+    virtual bool HasCollision() const { return false; }
+    virtual BoundingBox GetBoundingBox() const = 0;
 };
 
 
@@ -40,7 +42,10 @@ public:
 
     void draw() override;
 
-    BoundingBox GetBoundingBox();
+    bool HasCollision() const override { return true; }
+
+
+    BoundingBox GetBoundingBox() const override;
 };
 
 
@@ -65,7 +70,7 @@ public:
 
     CameraObject(Vector3 pos, Vector3 target, Vector3 up, float fovy = 45.0f, int projection = CAMERA_PERSPECTIVE);
     
-
+    BoundingBox GetBoundingBox() const override { return { 0 };}
 
     void update(float dt) override;
     void draw() override;
@@ -88,12 +93,17 @@ public:
 
     float facingAngle;   // pra onde ele "olha"
     PlayerState state;
+    float playerRadius = 0.3f;
+
 
     CameraObject* cameraObj;
     std::vector<GameObject*>* worldObjects = nullptr;
 
 
-    BoundingBox GetBoundingBox(Vector3 pos);
+    BoundingBox GetBoundingBox() const override;
+    BoundingBox GetBoundingBoxAt(Vector3 pos) const; 
+    bool CheckCollisionCircleAABB_XZ( Vector3 center, float radius,const BoundingBox& box);
+    
     Player(CameraObject* camera, World* w);
 
     ~Player();

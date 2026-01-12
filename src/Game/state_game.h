@@ -1,15 +1,15 @@
 #pragma once
-#include "src/state_machine/state.h"
-#include "src/state_machine/state_machine.h"
+#include "src/core/state.h"
+#include "src/core/state_machine.h"
 #include "raylib.h"
 #include "raymath.h"
-#include "src/config.h"
-#include "src/GameObjects/gameObjects.h"
+#include "src/core/config.h"
+#include "src/Game/GameObjects/gameObjects.h"
 #include <vector>
-#include "src/rlights.h"
-#include "src/Ui/Ui.h"
-#include "src/Utils/Colisores.h"
-#include "src/Mundo/mundo.h"
+#include "libs/rlights.h"
+#include "src/engine/Ui/Ui.h"
+#include "src/engine/Utils/Colisores.h"
+#include "src/Game/Mundo/mundo.h"
 
 
 

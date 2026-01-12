@@ -40,7 +40,7 @@ void Cube::draw(){
     rlPopMatrix();
 }
 
-BoundingBox Cube::GetBoundingBox() {
+BoundingBox Cube::GetBoundingBox() const {
     BoundingBox box;
     box.min = {
         position.x - size.x * 0.5f,
@@ -65,7 +65,7 @@ CameraObject::CameraObject(Vector3 pos, Vector3 target, Vector3 up, float fovy, 
     this->position = pos;      // posição do GameObject
     this->target = target;     // alvo para orbitar
     this->distance = Vector3Distance(pos, target); // distância inicial
-    this->yaw = 185.0f  * DEG2RAD; // Rotação da camera
+    this->yaw = 180.0f  * DEG2RAD; // Rotação da camera
     this->pitch = 35.0f * DEG2RAD;
 
     initialPosition.x = target.x + distance * cosf(pitch) * cosf(yaw);

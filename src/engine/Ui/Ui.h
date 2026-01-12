@@ -1,12 +1,12 @@
 #pragma once
-#include "src/config.h"
+#include "src/core/config.h"
 #include "raylib.h"
-#include "src/GameObjects/gameObjects.h"
+#include "src/Game/GameObjects/gameObjects.h"
 #include <cstring>   // strlen
 #include <cstdio>    // snprintf
 #include <cstdlib>   // atof
-#include "src/i18n/i18n.h"
-#include "src/Mundo/mundo.h"
+#include "src/engine/i18n/i18n.h"
+#include "src/Game/Mundo/mundo.h"
 
 void DrawMiniMap(World* world, Vector2 pos, float size);
 

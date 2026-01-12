@@ -1,19 +1,22 @@
 #pragma once
 #include "raylib.h"
-#include "src/config.h"
+#include "raymath.h"
+#include "src/core/config.h"
 #include <cstdlib> // para rand()
 #include <ctime>   // para time()
-#include "src/Utils/PerlinNoise.hpp"
+#include "src/engine/Utils/PerlinNoise.hpp"
 
-static const int WORLD_W = 40;
-static const int WORLD_H = 40;
+static const int WORLD_W = 100;
+static const int WORLD_H = 100;
 
 #define COR_GRAMA_VERDE (Color){ 36, 76, 10, 255 }
+#define COR_AREIA (Color){ 225, 193, 129, 255 }
 
 enum TileType {
     TILE_GRASS,
     TILE_DIRT,
-    TILE_WATER
+    TILE_WATER,
+    TILE_SAND
 };
 
 struct Tile {
@@ -44,6 +47,7 @@ private:
     siv::PerlinNoise perlin;
     Vector3 TileToWorld(int x, int z);
     void gerarmundo();
+    void generateSand();
 
     int countSameNeighbors(int x, int z);
     void applyRules();

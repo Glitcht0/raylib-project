@@ -205,6 +205,7 @@ void DrawMiniMap(World* world, Vector2 pos, float size) {
                 case TILE_GRASS: c = GREEN; break;
                 case TILE_DIRT:  c = BROWN; break;
                 case TILE_WATER: c = BLUE;  break;
+                case TILE_SAND: c = YELLOW;  break;
             }
 
             int dx = z;

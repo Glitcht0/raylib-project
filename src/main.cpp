@@ -1,6 +1,6 @@
 
 #include "raylib.h"
-#include "state_machine/state_machine.h"
+#include "src/core/state_machine.h"
 
 int main(void)
 {
