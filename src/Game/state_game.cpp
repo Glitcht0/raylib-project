@@ -39,10 +39,11 @@ void StateGame::onEnter() {
     cameraObj = new CameraObject({5,5,5}, {0,1,0}, {0,1,0});
 
 
+    world.setShader(shader);
 
 
     objects.push_back(new Cube((Vector3){0, 1, 2}, (Vector3){1, 1, 1}, RED)); //Cubo vermelho
-    objects.push_back(new Cube((Vector3){0, -0.01f, 0}, (Vector3){10, 0.01f, 10}, LIGHTGRAY)); // Chão
+    //objects.push_back(new Cube((Vector3){0, -0.01f, 0}, (Vector3){10, 0.01f, 10}, LIGHTGRAY)); // Chão
 
     playerObj = new Player(cameraObj, &world);
     playerObj->worldObjects = &objects;
@@ -114,7 +115,7 @@ void StateGame::draw() {
 
     BeginMode3D(cameraObj->cam);
 
-    DrawGridXZ(40, 1.0f);
+    //DrawGridXZ(40, 1.0f);
 
     BeginShaderMode(shader);
 

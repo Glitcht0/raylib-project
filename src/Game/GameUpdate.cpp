@@ -12,6 +12,7 @@ void StateGame::updateAll(){
     
     cameraObj->update(GetFrameTime());
     playerObj->update(GetFrameTime());
+    world.updateChunks(playerObj->position);
     updateLights(); // Atualiza luzes no shader
     updateObjects(); // Atualiza os objetos
 }

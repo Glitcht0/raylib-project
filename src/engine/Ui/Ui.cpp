@@ -55,15 +55,30 @@ void edit_table::update(GameObject* activeObject, GameMode mode) {
 
 
 void edit_table::draw(GameObject* activeObject, GameMode mode, Font uiFont){
-    
     if (!is_ativated) return;
 
+    
+
+
+    
+
     DrawRectangleV(position, size, COR_MESA);
+
+    // --- MINIMAPA ---
+    float mapSize = largura - 20;
+    Vector2 mapPos = { position.x + 10, position.y + altura - mapSize - 10};
+
+    DrawTextEx(uiFont, "MiniMap",  (Vector2){ mapPos.x, mapPos.y - 18 }, 14, 1, WHITE);
+
+    DrawMiniMap(world, mapPos, mapSize);
+
+    
 
     float x = position.x + 10;
     float y = position.y + 10;
 
     DrawTextEx(uiFont, T("EDIT_BAR"), (Vector2){ x, y }, 18, 1, WHITE);
+    
 
     if (!activeObject) return;
 
@@ -86,13 +101,7 @@ void edit_table::draw(GameObject* activeObject, GameMode mode, Font uiFont){
     rotY.draw(uiFont);
     rotZ.draw(uiFont);
 
-    // --- MINIMAPA ---
-    float mapSize = largura - 20;
-    Vector2 mapPos = { position.x + 10, position.y + altura - mapSize - 10};
-
-    DrawTextEx(uiFont, "MiniMap",  (Vector2){ mapPos.x, mapPos.y - 18 }, 14, 1, WHITE);
-
-    DrawMiniMap(world, mapPos, mapSize);
+    
   
 
     //DrawRectangleV(Vector2{x-2, y-1}, Vector2{ largura - 20, 15}, COR_INPUT);
@@ -211,7 +220,8 @@ void DrawMiniMap(World* world, Vector2 pos, float size) {
             int dx = z;
             int dz = w - 1 - x;
 
-            DrawRectangle( pos.x + dx * tileSize, pos.y + dz * tileSize, tileSize, tileSize, c );
+            DrawRectangle( pos.x + dx * tileSize, pos.y + dz * tileSize, tileSize + 1, tileSize + 1, c);
+
 
         }
     }
