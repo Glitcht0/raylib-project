@@ -1,22 +1,41 @@
 #include "mundo.h"
 
 
-void World::applyRules() {
-    for (int z = 0; z < WORLD_H; z++) {
-        for (int x = 0; x < WORLD_W; x++) {
+void World::applyRules(int zpos, int xpos, int largura, int altura) {
+
+
+    // ===== CLAMP DOS LIMITES DO MUNDO =====
+    int zEnd = zpos + altura;
+    int xEnd = xpos + largura;
+
+    if (zpos < 0) zpos = 0;
+    if (xpos < 0) xpos = 0;
+    if (zEnd > WORLD_H) zEnd = WORLD_H;
+    if (xEnd > WORLD_W) xEnd = WORLD_W;
+
+
+    for (int z = zpos; z < zEnd; z++) {
+        for (int x = xpos; x < xEnd; x++) {
 
             int neighbors = countSameNeighbors(x, z);
 
             // regra: tile isolado ou quase isolado
             if (neighbors <= 1) {
-                // converte para o tipo mais comum ao redor
                 TileType t = mostCommonNeighbor(x, z);
                 world[z][x].type = t;
-                world[z][x].blocked = (t == TILE_WATER);
+
+                if (t == TILE_WATER)
+                    world[z][x].flags |= TILE_BLOCKED;    // seta
+                else
+                    world[z][x].flags &= ~TILE_BLOCKED;   // limpa
             }
+
         }
     }
+
 }
+
+
 
 TileType World::mostCommonNeighbor(int x, int z) {
     int grass = 0, dirt = 0, water = 0;

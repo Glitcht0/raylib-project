@@ -34,10 +34,10 @@ bool World::Get_walkTileWorld(Vector3 pos, float halfSize) {
         int tz = (int)floor(checks[i].z);
 
         if (tx < 0 || tz < 0 || tx >= WORLD_W || tz >= WORLD_H)
-            continue; // ignora ponto fora do mapa
+            return false; // ignora ponto fora do mapa
 
-
-        if (world[tz][tx].blocked)
+        bool blocked = world[tz][tx].flags & TILE_BLOCKED;
+        if (blocked)
             return false;
     }
 

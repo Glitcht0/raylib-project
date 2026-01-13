@@ -6,27 +6,32 @@
 #include <ctime>   // para time()
 #include "src/engine/Utils/PerlinNoise.hpp"
 
-static const int WORLD_W = 200;
-static const int WORLD_H = 200;
 
-static const int CHUNK_SIZE = 16;
-static const int VIEW_DISTANCE = 10;
 
 #define COR_GRAMA_VERDE (Color){ 36, 76, 10, 255 }
 #define COR_AREIA (Color){ 225, 193, 129, 255 }
 
-enum TileType {
+enum TileType : uint8_t{
     TILE_GRASS,
     TILE_DIRT,
     TILE_WATER,
     TILE_SAND
 };
 
-struct Tile {
-    TileType type;
-    bool blocked;
+enum TileFlags {
+    TILE_BLOCKED = 1 << 0
 };
 
+struct Tile {
+    TileType type;
+    uint8_t flags;
+};
+
+struct TileChunk {
+    int cx, cz;
+    Tile tiles[TILE_CHUNK_SIZE][TILE_CHUNK_SIZE];
+    bool dirty;   // precisa rebuildar mesh
+};
 
 struct Chunk {
     int cx, cz;        // coordenada do chunk no grid
@@ -43,6 +48,11 @@ public:
     void draw();
     Tile world[WORLD_H][WORLD_W];
 
+    std::unordered_map<long long, TileChunk> tileChunks;
+
+    TileChunk& getChunk(int cx, int cz);
+
+
     
 
     bool Get_walkTileWorld(Vector3 pos, float halfSize);
@@ -56,15 +66,17 @@ public:
 
 private:
 
-    
+    float terrain_elevation = 1.4f, terrain_raio = 1.4f;
     siv::PerlinNoise perlin;
     Vector3 TileToWorld(int x, int z);
     void gerarmundo();
     void generateSand();
     void buildTerrainMesh();
+    void generateChunk(TileChunk& chunk);
+    void CreateIsland(int zpos, int xpos, int largura, int altura, float raio, float elevacao);
 
     int countSameNeighbors(int x, int z);
-    void applyRules();
+    void applyRules(int zpos, int xpos, int largura, int altura);
     TileType mostCommonNeighbor(int x, int z);
 
     double scale = 0.03; //escala
