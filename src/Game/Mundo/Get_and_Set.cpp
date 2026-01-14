@@ -33,17 +33,22 @@ bool World::Get_walkTileWorld(Vector3 pos, float halfSize) {
         int tx = (int)floor(checks[i].x);
         int tz = (int)floor(checks[i].z);
 
-        if (tx < 0 || tz < 0 || tx >= WORLD_W || tz >= WORLD_H)
-            return false; // ignora ponto fora do mapa
+        // CORREÇÃO: Usar GetTile em vez de world[tz][tx]
+        // Isso garante que estamos lendo do Chunk, e não da array antiga.
+        Tile* tile = GetTile(tx, tz);
 
-        bool blocked = world[tz][tx].flags & TILE_BLOCKED;
-        if (blocked)
+        // Se o tile for nulo (fora do mundo carregado) ou for bloqueado:
+        if (tile == nullptr) {
+            return false; // Ou true, dependendo se você quer bloquear bordas infinitas
+        }
+
+        if (tile->flags & TILE_BLOCKED) {
             return false;
+        }
     }
 
     return true;
 }
-
 
 void World::setShader(Shader s) {
     terrainShader = s;
@@ -54,3 +59,31 @@ void World::setShader(Shader s) {
 
 
 
+
+// Retorna ponteiro para o TileChunk. Se não existir, cria um vazio.
+TileChunk* World::GetTileChunk(int cx, int cz) {
+    long long key = ChunkKey(cx, cz);
+    
+    // Se o chunk ainda não existe no mapa, ele é criado automaticamente pelo operator []
+    return &chunkData[key];
+}
+
+// Retorna ponteiro para um Tile específico.
+Tile* World::GetTile(int globalX, int globalZ) {
+
+    int cx = (int)floor((float)globalX / CHUNK_SIZE);
+    int cz = (int)floor((float)globalZ / CHUNK_SIZE);
+
+    // Ajuste para coordenadas locais dentro do chunk (lida com negativos corretamente)
+    int localX = globalX % CHUNK_SIZE;
+    int localZ = globalZ % CHUNK_SIZE;
+
+    if (localX < 0) localX += CHUNK_SIZE;
+    if (localZ < 0) localZ += CHUNK_SIZE;
+
+    TileChunk* tc = GetTileChunk(cx, cz);
+    
+    if (!tc) return nullptr;
+
+    return &tc->tiles[localZ][localX];
+}

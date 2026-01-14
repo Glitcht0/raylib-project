@@ -11,8 +11,8 @@
 #define LARGURA_TELA 1280
 #define ALTURA_TELA 720
 
-static const int WORLD_W = 400;
-static const int WORLD_H = 400;
+static const int WORLD_W = 200;
+static const int WORLD_H = 200;
 
 static const int CHUNK_SIZE = 16;
 static const int TILE_CHUNK_SIZE = 16;

@@ -98,6 +98,10 @@ void StateGame::update(appstate* currentState) {
     
     handleInput(); // Entrada de teclado para mudar modos e selecionar objetos aqui aonde vai ficar a ações dos botões
     updateAll();
+
+
+
+
 }
 
 

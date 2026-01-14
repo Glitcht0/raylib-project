@@ -1,5 +1,92 @@
 #include "mundo.h"
 
+
+
+
+void World::gerarmundo() {
+
+    // ===== Gerar Matrix do mundo ====
+    for (int z = 0; z < WORLD_H; z++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            world[z][x].type = TILE_WATER;
+            world[z][x].flags = 0;
+            world[z][x].flags |= TILE_BLOCKED;
+
+
+        }
+    }
+
+    CreateIsland(0, 0, 200, 200, 1.4f, 1.4f);
+
+
+    
+
+
+    // ===== Criar chunks pra render ====
+    int chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
+    chunks.reserve(chunksX * chunksZ);
+
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            Chunk c;
+            c.cx = cx;
+            c.cz = cz;
+            c.built = false;
+            chunks.push_back(c);
+        }
+    }
+
+
+    // ===== Criar TileChunks e copiar do world =====
+    tileChunks.clear();
+    chunkData.clear();
+
+    chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            TileChunk tc;
+            tc.cx = cx;
+            tc.cz = cz;
+            tc.built = true; // Marque como true, pois já estamos gerando aqui
+
+            for (int z = 0; z < CHUNK_SIZE; z++) {
+                for (int x = 0; x < CHUNK_SIZE; x++) {
+                    int wx = cx * CHUNK_SIZE + x;
+                    int wz = cz * CHUNK_SIZE + z;
+
+                    // Se estiver dentro do mundo, copia do world[][]
+                    if (wx < WORLD_W && wz < WORLD_H) {
+                        tc.tiles[z][x] = world[wz][wx];
+                    } else {
+                        tc.tiles[z][x].type = TILE_WATER;
+                        tc.tiles[z][x].flags = TILE_BLOCKED;
+                    }
+                }
+            }
+
+            // --- AQUI ESTÁ A CORREÇÃO ---
+            // Adiciona tanto no vetor (para compatibilidade com código antigo)
+            tileChunks.push_back(tc);
+            
+            // E TAMBÉM no mapa (para o GetTile funcionar)
+            long long key = ChunkKey(cx, cz);
+            chunkData[key] = tc;
+            // -----------------------------
+        }
+    }
+    mundo_gerado = true;
+
+}
+
+
+
+
+
+
 void World::CreateIsland(int zpos, int xpos, int largura, int altura, float raio, float elevacao){
     // ===== CLAMP DOS LIMITES DO MUNDO =====
     int zEnd = zpos + altura;
@@ -76,53 +163,6 @@ void World::CreateIsland(int zpos, int xpos, int largura, int altura, float raio
 }
 
 
-void World::generateChunk(TileChunk& chunk) {
-    for (int z = 0; z < TILE_CHUNK_SIZE; z++)
-    for (int x = 0; x < TILE_CHUNK_SIZE; x++) {
-
-       double n = perlin.octave2D_01( x * scale, z * scale, octaves);
-
-
-
-        float dx = (x - cx) / (largura * 0.5f * terrain_raio);
-        float dz = (z - cz) / (altura  * 0.5f * terrain_raio);
-
-        float dist = sqrtf(dx*dx + dz*dz);
-        float mask = 1.0f - Clamp(dist, 0.0f, 1.0f);
-
-        mask = powf(mask, terrain_elevation);  // Numero maior, pico no centro, menor, mais plano
-
-        // Altura final
-        n = n * mask;
-
-        // === Definição dos Tiles ===
-        if (n < 0.15) {
-            chunk.tiles[z][x].type = TILE_WATER;
-            chunk.tiles[z][x].flags |= TILE_BLOCKED;
-
-        }
-        else if (n < 0.20) {
-            chunk.tiles[z][x].type = TILE_SAND;
-            chunk.tiles[z][x].flags &= ~TILE_BLOCKED;
-
-        }
-        else if (n < 0.25) {
-            chunk.tiles[z][x].type = TILE_DIRT;
-            chunk.tiles[z][x].flags &= ~TILE_BLOCKED;
-
-        }
-        else if (n<= 1.0) {
-            chunk.tiles[z][x].type = TILE_GRASS;
-            chunk.tiles[z][x].flags &= ~TILE_BLOCKED;
-
-        }
-        else {
-            chunk.tiles[z][x].type = TILE_WATER;
-            chunk.tiles[z][x].flags |= TILE_BLOCKED;
-
-        }
-    }
-}
 
 
 
@@ -141,24 +181,28 @@ void World::buildChunkMesh(Chunk& chunk) {
     mesh.vertices = (float*)MemAlloc(vertexCount * 3 * sizeof(float));
     mesh.colors   = (unsigned char*)MemAlloc(vertexCount * 4 * sizeof(unsigned char));
     mesh.normals  = (float*)MemAlloc(vertexCount * 3 * sizeof(float));
+    int v = 0, c = 0, n = 0; // ⬅️ declare antes de usar
 
-    int v = 0, c = 0, n = 0;
+    int chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-    int startX = chunk.cx * CHUNK_SIZE;
-    int startZ = chunk.cz * CHUNK_SIZE;
+    TileChunk* tileChunk = nullptr;
 
+    // usa tileChunks (vetor pré-gerado) apenas se estiver dentro do mundo
+    if (chunk.cx >= 0 && chunk.cx < chunksX && chunk.cz >= 0 && chunk.cz < chunksZ) {
+        tileChunk = &tileChunks[chunk.cz * chunksX + chunk.cx];
+    } else {
+        // fora do mundo => pega do map (criado dinamicamente)
+        tileChunk = GetTileChunk(chunk.cx, chunk.cz);
+    }
+
+    if (!tileChunk) return; // segurança
     for (int z = 0; z < CHUNK_SIZE; z++) {
         for (int x = 0; x < CHUNK_SIZE; x++) {
+            Tile& tile = tileChunk->tiles[z][x]; 
 
-            int wx = startX + x;
-            int wz = startZ + z;
-
-            if (wx < 0 || wx >= WORLD_W || wz < 0 || wz >= WORLD_H)
-                continue;
-
-            Tile& tile = world[wz][wx];
-
-            Vector3 p = { wx + 0.5f, 0.0f, wz + 0.5f };
+        
+            Vector3 p = { (chunk.cx * CHUNK_SIZE + x) + 0.5f, 0.0f, (chunk.cz * CHUNK_SIZE + z) + 0.5f };
 
             Color col;
             switch (tile.type) {
@@ -199,3 +243,19 @@ void World::buildChunkMesh(Chunk& chunk) {
     if (terrainShader.id != 0)
         chunk.model.materials[0].shader = terrainShader;
 }
+
+
+void World::buildTileChunk(TileChunk& chunk) {
+    for (int z = 0; z < CHUNK_SIZE; z++) {
+        for (int x = 0; x < CHUNK_SIZE; x++) {
+            chunk.tiles[z][x].type = TILE_WATER;
+            chunk.tiles[z][x].flags |= TILE_BLOCKED;
+        }
+    }
+    chunk.built = true;
+}
+
+
+
+
+

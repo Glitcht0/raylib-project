@@ -15,13 +15,23 @@ World::~World() {
 
 
 void World::update(Vector3 playerPos) {
+    if(!mundo_gerado){
+        return;
+    }
+    unloadFarChunks(playerPos);
     updateChunks(playerPos);
+
+
 }
 
 
 void World::draw() {
-    for (Chunk* chunk : visibleChunks) {
-        DrawModel(chunk->model, {0,0,0}, 1.0f, WHITE);
+    if(!mundo_gerado)
+        return;
+
+   
+    for (int index : visibleChunks) {
+        DrawModel(chunks[index].model, {0,0,0}, 1.0f, WHITE);
     }
 }
 
@@ -32,94 +42,101 @@ void World::updateChunks(Vector3 playerPos) {
     int cx = (int)floor(playerPos.x / CHUNK_SIZE);
     int cz = (int)floor(playerPos.z / CHUNK_SIZE);
 
+    tileVisibleChunks.clear();
     visibleChunks.clear();
 
-    for (Chunk& chunk : chunks) {
-        if (abs(chunk.cx - cx) <= VIEW_DISTANCE &&
-            abs(chunk.cz - cz) <= VIEW_DISTANCE) {
+    // percorre a área visível ao redor do player
+    for (int dz = -VIEW_DISTANCE; dz <= VIEW_DISTANCE; dz++) {
+        for (int dx = -VIEW_DISTANCE; dx <= VIEW_DISTANCE; dx++) {
+            int chunkX = cx + dx;
+            int chunkZ = cz + dz;
 
-            if (!chunk.built) {
-                buildChunkMesh(chunk); // builda na primeira necessidade
+            // pega ou cria TileChunk dinamicamente
+            TileChunk* tilechunk = GetTileChunk(chunkX, chunkZ);
+            
+            if (!tilechunk->built){
+                
+                for (int z = 0; z < CHUNK_SIZE; z++) {
+                    for (int x = 0; x < CHUNK_SIZE; x++) {
+                        tilechunk->tiles[z][x].type = TILE_WATER;
+                        tilechunk->tiles[z][x].flags |= TILE_BLOCKED;
+                    }
+                }
+                tilechunk->built = true;
+            }
+            tileVisibleChunks.push_back(tilechunk);
+
+            // ====== Mesh Chunk =====
+
+            int chunkIndex = -1; // Vamos procurar o índice
+
+            // 1. Procura se o chunk já existe
+            for (size_t i = 0; i < chunks.size(); i++) {
+                if (chunks[i].cx == chunkX && chunks[i].cz == chunkZ) { 
+                    chunkIndex = i; 
+                    break; 
+                }
             }
 
-            visibleChunks.push_back(&chunk);
+            // 2. Se não existe, cria um novo
+            if (chunkIndex == -1) {
+                Chunk c;
+                c.cx = chunkX;
+                c.cz = chunkZ;
+                c.built = false;
+                
+                chunks.push_back(c); // Aqui o vetor pode realocar, mas não tem problema
+                
+                // O índice do novo elemento é o tamanho - 1
+                chunkIndex = chunks.size() - 1; 
+            }
+
+            // 3. Garante que a mesh está construída
+            // Note que acessamos chunks[chunkIndex] diretamente
+            if (!chunks[chunkIndex].built)
+                buildChunkMesh(chunks[chunkIndex]);
+
+            // 4. Adiciona O ÍNDICE na lista visível (Seguro contra crash)
+            visibleChunks.push_back(chunkIndex);
         }
     }
 }
 
 
-TileChunk& World::getChunk(int cx, int cz) {
-    auto key = std::make_pair(cx, cz);
-
-    if (tileChunks.count(key) == 0) {
-        TileChunk chunk;
-        chunk.cx = cx;
-        chunk.cz = cz;
-        chunk.dirty = true;
-
-        // 1️⃣ base: tudo água
-        for (int z = 0; z < TILE_CHUNK_SIZE; z++)
-        for (int x = 0; x < TILE_CHUNK_SIZE; x++) {
-            chunk.tiles[z][x].type = TILE_WATER;
-            chunk.tiles[z][x].flags = TILE_BLOCKED;
-        }
-
-        // 2️⃣ geração procedural LOCAL
-        generateChunk(chunk);
-
-        tileChunks[key] = chunk;
-    }
-
-    return tileChunks[key];
-}
 
 
+// Em mundo.cpp -> unloadFarChunks
 
-void World::gerarmundo() {
-
-    for (int z = 0; z < WORLD_H; z++) {
-        for (int x = 0; x < WORLD_W; x++) {
-            world[z][x].type = TILE_WATER;
-            world[z][x].flags = 0;
-            world[z][x].flags |= TILE_BLOCKED;
-
-
-        }
-    }
-
-    CreateIsland(100, 100, 200, 200, 1.4f, 1.4f);
-
-
+void World::unloadFarChunks(Vector3 playerPos) {
+    int cx = (int)floor(playerPos.x / CHUNK_SIZE);
+    int cz = (int)floor(playerPos.z / CHUNK_SIZE);
     
+    int deleteDistance = VIEW_DISTANCE + 4;
+    // --------------------------
+    
+    for (size_t i = 0; i < chunks.size(); ) {
+        Chunk& c = chunks[i];
 
+        int distX = abs(c.cx - cx);
+        int distZ = abs(c.cz - cz);
 
-    // ===== Criar chunks ====
-    int chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    int chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
+        // Debug visual para entender o que o código "pensa"
+        // (Isso vai floodar o console se você tiver muitos chunks, use com cautela ou só se não funcionar)
+        // TraceLog(LOG_INFO, "Chunk [%d, %d] Dist: %d/%d (Limite: %d)", c.cx, c.cz, distX, distZ, deleteDistance);
 
-    chunks.reserve(chunksX * chunksZ);
+        if (distX > deleteDistance || distZ > deleteDistance) {
+            
+            if (c.built) {
+                // AQUI VAI APARECER O LOG IGUAL AO DO SEU CUBO
+                UnloadModel(c.model); 
+            }
 
-    for (int cz = 0; cz < chunksZ; cz++) {
-        for (int cx = 0; cx < chunksX; cx++) {
-            Chunk c;
-            c.cx = cx;
-            c.cz = cz;
-            c.built = false;
-            chunks.push_back(c);
+            // Remove do vetor
+            chunks[i] = chunks.back();
+            chunks.pop_back();
+            
+        } else {
+            i++; 
         }
     }
-
-
-    //generateSand();
-    //buildTerrainMesh();
-
 }
-
-
-
-
-
-
-
-
-

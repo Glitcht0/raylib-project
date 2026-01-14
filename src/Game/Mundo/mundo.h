@@ -5,7 +5,8 @@
 #include <cstdlib> // para rand()
 #include <ctime>   // para time()
 #include "src/engine/Utils/PerlinNoise.hpp"
-
+#include <unordered_map>
+#include <vector>
 
 
 #define COR_GRAMA_VERDE (Color){ 36, 76, 10, 255 }
@@ -28,9 +29,9 @@ struct Tile {
 };
 
 struct TileChunk {
-    int cx, cz;
-    Tile tiles[TILE_CHUNK_SIZE][TILE_CHUNK_SIZE];
-    bool dirty;   // precisa rebuildar mesh
+    int cx, cz;  
+    Tile tiles[CHUNK_SIZE][CHUNK_SIZE];
+    bool built = false;
 };
 
 struct Chunk {
@@ -39,6 +40,8 @@ struct Chunk {
     bool built = false;
 };
 
+
+
 class World {
 public:
 
@@ -46,18 +49,22 @@ public:
     ~World();
     void update(Vector3 playerPos);
     void draw();
+
     Tile world[WORLD_H][WORLD_W];
 
-    std::unordered_map<long long, TileChunk> tileChunks;
+    std::unordered_map<long long, TileChunk> chunkData;
+
 
     TileChunk& getChunk(int cx, int cz);
-
-
-    
-
+    Tile* GetTile(int globalX, int globalZ);
+    TileChunk* GetTileChunk(int cx, int cz);
     bool Get_walkTileWorld(Vector3 pos, float halfSize);
     Vector3 Get_Spaw(float halfSize);
+
     void updateChunks(Vector3 playerPos);
+    void updateTileChunks(Vector3 playerPos);
+    void unloadFarChunks(Vector3 playerPos);
+
     void setShader(Shader s);
 
     
@@ -65,31 +72,44 @@ public:
     
 
 private:
+    bool mundo_gerado = false;
+    bool terrainBuilt = false;
+
 
     float terrain_elevation = 1.4f, terrain_raio = 1.4f;
+    double scale = 0.03; //escala
+    int octaves = 5; //detalhes
     siv::PerlinNoise perlin;
-    Vector3 TileToWorld(int x, int z);
+    
+    
+
+
+   
     void gerarmundo();
-    void generateSand();
-    void buildTerrainMesh();
-    void generateChunk(TileChunk& chunk);
     void CreateIsland(int zpos, int xpos, int largura, int altura, float raio, float elevacao);
+
+    void buildChunkMesh(Chunk& chunk);
+    void buildTileChunk(TileChunk& chunk);
+
 
     int countSameNeighbors(int x, int z);
     void applyRules(int zpos, int xpos, int largura, int altura);
     TileType mostCommonNeighbor(int x, int z);
 
-    double scale = 0.03; //escala
-    int octaves = 5; //detalhes
+
 
     Model terrainModel;
-    bool terrainBuilt = false;
     Shader terrainShader;
 
     std::vector<Chunk> chunks;         // todos
-    std::vector<Chunk*> visibleChunks; // só visíveis
+    std::vector<int> visibleChunks; // só visíveis
 
-    void buildChunkMesh(Chunk& chunk);
+    std::vector<TileChunk> tileChunks;         // todos
+    std::vector<TileChunk*> tileVisibleChunks; // só visíveis
+
+    
+
+    long long ChunkKey(int cx, int cz) { return ((long long)cx << 32) | (unsigned int)cz; }
 
 
 
