@@ -1,3 +1,6 @@
+
+
+
 #include "Colisores.h"
 
 
@@ -8,3 +11,7 @@ Font Carregarfonte() {
 
     return LoadFontEx( "resources/fonts/arial.ttf", 48, codepoints, 256 - 32 );
 }
+
+
+
+

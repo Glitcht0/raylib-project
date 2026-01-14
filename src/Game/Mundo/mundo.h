@@ -9,6 +9,13 @@
 #include <vector>
 
 
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <deque>
+#include <string>
+
+
 #define COR_GRAMA_VERDE (Color){ 36, 76, 10, 255 }
 #define COR_AREIA (Color){ 225, 193, 129, 255 }
 
@@ -38,6 +45,7 @@ struct Chunk {
     int cx, cz;        // coordenada do chunk no grid
     Model model;
     bool built = false;
+    bool building = false;
 };
 
 
@@ -45,14 +53,16 @@ struct Chunk {
 class World {
 public:
 
-    World();
+    World(std::string nomeM = "default");
     ~World();
     void update(Vector3 playerPos);
     void draw();
 
     Tile world[WORLD_H][WORLD_W];
 
-    std::unordered_map<long long, TileChunk> chunkData;
+    std::string nomeMundo;
+
+    
 
 
     TileChunk& getChunk(int cx, int cz);
@@ -60,6 +70,10 @@ public:
     TileChunk* GetTileChunk(int cx, int cz);
     bool Get_walkTileWorld(Vector3 pos, float halfSize);
     Vector3 Get_Spaw(float halfSize);
+    void getPlayerChunk(Vector3 playerPos, int& cx, int& cz);
+    int getOrCreateMeshChunk(int chunkX, int chunkZ);
+    //void ensureChunkMeshBuilt(int chunkIndex);
+    TileChunk& getOrCreateTileChunk(int chunkX, int chunkZ);
 
     void updateChunks(Vector3 playerPos);
     void updateTileChunks(Vector3 playerPos);
@@ -89,7 +103,10 @@ private:
     void CreateIsland(int zpos, int xpos, int largura, int altura, float raio, float elevacao);
 
     void buildChunkMesh(Chunk& chunk);
-    void buildTileChunk(TileChunk& chunk);
+    void processUnloadQueue(int maxPerFrame = 1);
+    void processBuildQueue(int maxPerFrame);
+    void ensureChunkMeshBuilt(int chunkIndex);
+    void ensureSaveDirectories();
 
 
     int countSameNeighbors(int x, int z);
@@ -101,16 +118,50 @@ private:
     Model terrainModel;
     Shader terrainShader;
 
+
+
     std::vector<Chunk> chunks;         // todos
-    std::vector<int> visibleChunks; // só visíveis
+    std::vector<int> visibleChunks;    // só visíveis
 
-    std::vector<TileChunk> tileChunks;         // todos
-    std::vector<TileChunk*> tileVisibleChunks; // só visíveis
+    std::unordered_map<long long, TileChunk> chunkData;
 
-    
+    //std::vector<TileChunk> tileChunks;    // todos
+    std::vector<long long> tileVisibleChunks;   // só visíveis
+
+    std::vector<Model> unloadQueue;
+    std::vector<int> buildQueue;
 
     long long ChunkKey(int cx, int cz) { return ((long long)cx << 32) | (unsigned int)cz; }
 
 
+
+    
+    // ===== 🧵 SISTEMA DE THREADS =====
+    
+    // Flag para manter a thread viva
+    std::atomic<bool> threadRunning;
+    std::thread chunkLoaderThread;
+    std::mutex queueMutex; // Protege o acesso às filas
+
+    // Estrutura para pedir um chunk
+    struct ChunkRequest {
+        int cx, cz;
+    };
+
+    // Filas de comunicação
+    std::deque<ChunkRequest> pendingRequests; // Main -> Thread
+    std::deque<TileChunk> loadedChunks;       // Thread -> Main
+
+    // Funções do sistema de arquivos e thread
+    void loaderThreadLoop(); // Loop da thread
+    void requestChunkLoad(int cx, int cz);
+    void processLoadedChunks();
+    
+    // Salvar e Carregar
+    bool saveChunkToDisk(const TileChunk& tc);
+    bool loadChunkFromDisk(int cx, int cz, TileChunk& outChunk);
+    
+    // Geração local (substitui o CreateIsland global para funcionar por chunk)
+    void generateSingleChunk(TileChunk& tc);
 
 };

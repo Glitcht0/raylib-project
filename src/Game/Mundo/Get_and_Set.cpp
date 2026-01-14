@@ -68,6 +68,7 @@ TileChunk* World::GetTileChunk(int cx, int cz) {
     return &chunkData[key];
 }
 
+
 // Retorna ponteiro para um Tile específico.
 Tile* World::GetTile(int globalX, int globalZ) {
 
@@ -87,3 +88,48 @@ Tile* World::GetTile(int globalX, int globalZ) {
 
     return &tc->tiles[localZ][localX];
 }
+
+
+void World::getPlayerChunk(Vector3 playerPos, int& cx, int& cz) {
+    cx = (int)floor(playerPos.x / CHUNK_SIZE);
+    cz = (int)floor(playerPos.z / CHUNK_SIZE);
+}
+
+
+TileChunk& World::getOrCreateTileChunk(int chunkX, int chunkZ) {
+    long long key = ChunkKey(chunkX, chunkZ);
+    TileChunk& tc = chunkData[key];
+
+    tc.cx = chunkX;
+    tc.cz = chunkZ;
+
+    if (!tc.built) {
+        for (int z = 0; z < CHUNK_SIZE; z++) {
+            for (int x = 0; x < CHUNK_SIZE; x++) {
+                tc.tiles[z][x].type = TILE_WATER;
+                tc.tiles[z][x].flags |= TILE_BLOCKED;
+            }
+        }
+        tc.built = true;
+    }
+
+    return tc;
+}
+
+
+
+int World::getOrCreateMeshChunk(int chunkX, int chunkZ) {
+    for (size_t i = 0; i < chunks.size(); i++) {
+        if (chunks[i].cx == chunkX && chunks[i].cz == chunkZ)
+            return (int)i;
+    }
+
+    Chunk c;
+    c.cx = chunkX;
+    c.cz = chunkZ;
+    c.built = false;
+
+    chunks.push_back(c);
+    return (int)chunks.size() - 1;
+}
+

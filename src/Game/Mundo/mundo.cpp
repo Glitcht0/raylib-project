@@ -1,23 +1,49 @@
 #include "mundo.h"
 
 
-World::World(): perlin(time(nullptr)) {
+World::World(std::string nomeM): perlin(time(nullptr)) {
+    
+
+    nomeMundo = nomeM;
+    
+    ensureSaveDirectories();
+    chunkData.clear();
     gerarmundo();
-    //time(nullptr)
+
+    // Inicia a thread de carregamento
+    threadRunning = true;
+    chunkLoaderThread = std::thread(&World::loaderThreadLoop, this);
+
+    
+
 }
 
 World::~World() {
+    // 1. Salvar tudo antes de sair (opcional, mas recomendado)
+    for (auto& pair : chunkData) {
+        saveChunkToDisk(pair.second);
+    }
+
+    // 2. Parar a thread
+    threadRunning = false;
+    if (chunkLoaderThread.joinable()) {
+        chunkLoaderThread.join();
+    }
+    
+    // Limpeza das meshes
     for (Chunk& c : chunks) {
         if (c.built) UnloadModel(c.model);
     }
 }
 
 
-
 void World::update(Vector3 playerPos) {
-    if(!mundo_gerado){
-        return;
-    }
+
+    processUnloadQueue(1); 
+    processBuildQueue(1); 
+
+    processLoadedChunks();
+
     unloadFarChunks(playerPos);
     updateChunks(playerPos);
 
@@ -26,78 +52,47 @@ void World::update(Vector3 playerPos) {
 
 
 void World::draw() {
-    if(!mundo_gerado)
-        return;
-
-   
     for (int index : visibleChunks) {
-        DrawModel(chunks[index].model, {0,0,0}, 1.0f, WHITE);
+        if (chunks[index].built) { 
+            DrawModel(chunks[index].model, {0,0,0}, 1.0f, WHITE);
+        }
     }
 }
 
 
 
-
 void World::updateChunks(Vector3 playerPos) {
-    int cx = (int)floor(playerPos.x / CHUNK_SIZE);
-    int cz = (int)floor(playerPos.z / CHUNK_SIZE);
+    int cx, cz;
+    getPlayerChunk(playerPos, cx, cz);
+ 
+    tileVisibleChunks.clear(); // 🧊 Tiles
+    visibleChunks.clear(); // 🏞️ Mesh
 
-    tileVisibleChunks.clear();
-    visibleChunks.clear();
-
-    // percorre a área visível ao redor do player
     for (int dz = -VIEW_DISTANCE; dz <= VIEW_DISTANCE; dz++) {
         for (int dx = -VIEW_DISTANCE; dx <= VIEW_DISTANCE; dx++) {
             int chunkX = cx + dx;
             int chunkZ = cz + dz;
+            long long key = ChunkKey(chunkX, chunkZ);
 
-            // pega ou cria TileChunk dinamicamente
-            TileChunk* tilechunk = GetTileChunk(chunkX, chunkZ);
-            
-            if (!tilechunk->built){
+            // Verifica se já temos os DADOS
+            if (chunkData.find(key) == chunkData.end()) {
                 
-                for (int z = 0; z < CHUNK_SIZE; z++) {
-                    for (int x = 0; x < CHUNK_SIZE; x++) {
-                        tilechunk->tiles[z][x].type = TILE_WATER;
-                        tilechunk->tiles[z][x].flags |= TILE_BLOCKED;
-                    }
-                }
-                tilechunk->built = true;
-            }
-            tileVisibleChunks.push_back(tilechunk);
-
-            // ====== Mesh Chunk =====
-
-            int chunkIndex = -1; // Vamos procurar o índice
-
-            // 1. Procura se o chunk já existe
-            for (size_t i = 0; i < chunks.size(); i++) {
-                if (chunks[i].cx == chunkX && chunks[i].cz == chunkZ) { 
-                    chunkIndex = i; 
-                    break; 
-                }
-            }
-
-            // 2. Se não existe, cria um novo
-            if (chunkIndex == -1) {
-                Chunk c;
-                c.cx = chunkX;
-                c.cz = chunkZ;
-                c.built = false;
+                requestChunkLoad(chunkX, chunkZ); // NÃO TEMOS! Pede para a thread carregar/gerar
+            } 
+            else {
                 
-                chunks.push_back(c); // Aqui o vetor pode realocar, mas não tem problema
+                tileVisibleChunks.push_back(key); // JÁ TEMOS! Pode renderizar e criar Mesh
+
+                TileChunk& tc = chunkData[key];
+                if (tc.built){}
                 
-                // O índice do novo elemento é o tamanho - 1
-                chunkIndex = chunks.size() - 1; 
+
+                
+                // Só cria a Mesh visual se os dados lógicos já existirem
+                int meshIndex = getOrCreateMeshChunk(chunkX, chunkZ);
+                ensureChunkMeshBuilt(meshIndex);
+                visibleChunks.push_back(meshIndex);
             }
-
-            // 3. Garante que a mesh está construída
-            // Note que acessamos chunks[chunkIndex] diretamente
-            if (!chunks[chunkIndex].built)
-                buildChunkMesh(chunks[chunkIndex]);
-
-            // 4. Adiciona O ÍNDICE na lista visível (Seguro contra crash)
-            visibleChunks.push_back(chunkIndex);
         }
     }
 }
@@ -105,38 +100,123 @@ void World::updateChunks(Vector3 playerPos) {
 
 
 
-// Em mundo.cpp -> unloadFarChunks
+void World::gerarmundo() {
 
+    // ===== Gerar Matrix do mundo ====
+    for (int z = 0; z < WORLD_H; z++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            world[z][x].type = TILE_WATER;
+            world[z][x].flags = 0;
+            world[z][x].flags |= TILE_BLOCKED;
+
+
+        }
+    }
+
+    CreateIsland(0, 0, 200, 200, 1.4f, 1.4f);
+
+
+    
+
+
+    // ===== 🏞️ Criar chunks pra render ====
+    int chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
+    chunks.reserve(chunksX * chunksZ);
+
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            Chunk c;
+            c.cx = cx;
+            c.cz = cz;
+            c.built = false;
+            chunks.push_back(c);
+        }
+    }
+
+
+    // ===== 🧊 Criar TileChunks e copiar do world =====
+    //tileChunks.clear();
+    chunkData.clear();
+
+    chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            TileChunk tc;
+            tc.cx = cx;
+            tc.cz = cz;
+            tc.built = true; // Marque como true, pois já estamos gerando aqui
+
+            for (int z = 0; z < CHUNK_SIZE; z++) {
+                for (int x = 0; x < CHUNK_SIZE; x++) {
+                    int wx = cx * CHUNK_SIZE + x;
+                    int wz = cz * CHUNK_SIZE + z;
+
+                    // Se estiver dentro do mundo, copia do world[][]
+                    if (wx < WORLD_W && wz < WORLD_H) {
+                        tc.tiles[z][x] = world[wz][wx];
+                    } else {
+                        tc.tiles[z][x].type = TILE_WATER;
+                        tc.tiles[z][x].flags = TILE_BLOCKED;
+                    }
+                }
+            }
+
+            // Adiciona tanto no vetor (para compatibilidade com código antigo)
+            //tileChunks.push_back(tc);
+            
+            // E TAMBÉM no mapa (para o GetTile funcionar)
+            long long key = ChunkKey(cx, cz);
+            chunkData[key] = tc;
+            // -----------------------------
+        }
+    }
+    mundo_gerado = true;
+
+}
+
+
+
+
+
+// 🏞️ Descarrega chunks muito distantes do player, somente as meshs (Chunks)
 void World::unloadFarChunks(Vector3 playerPos) {
     int cx = (int)floor(playerPos.x / CHUNK_SIZE);
     int cz = (int)floor(playerPos.z / CHUNK_SIZE);
-    
+
     int deleteDistance = VIEW_DISTANCE + 4;
-    // --------------------------
-    
+
     for (size_t i = 0; i < chunks.size(); ) {
         Chunk& c = chunks[i];
 
         int distX = abs(c.cx - cx);
         int distZ = abs(c.cz - cz);
 
-        // Debug visual para entender o que o código "pensa"
-        // (Isso vai floodar o console se você tiver muitos chunks, use com cautela ou só se não funcionar)
-        // TraceLog(LOG_INFO, "Chunk [%d, %d] Dist: %d/%d (Limite: %d)", c.cx, c.cz, distX, distZ, deleteDistance);
-
         if (distX > deleteDistance || distZ > deleteDistance) {
-            
-            if (c.built) {
-                // AQUI VAI APARECER O LOG IGUAL AO DO SEU CUBO
-                UnloadModel(c.model); 
+
+            long long key = ChunkKey(c.cx, c.cz);
+            if (chunkData.count(key)) {
+                saveChunkToDisk(chunkData[key]); // <--- SALVA NO DISCO
+                chunkData.erase(key);            // <--- TIRA DA RAM
             }
 
-            // Remove do vetor
+            // 🔥 joga pra fila
+            if (c.built) {
+                unloadQueue.push_back(c.model);
+
+            }
+
+            // remove da lógica imediatamente
             chunks[i] = chunks.back();
             chunks.pop_back();
-            
-        } else {
-            i++; 
+        } 
+        else {
+            i++;
         }
     }
 }
+
+

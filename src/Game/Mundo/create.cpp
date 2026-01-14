@@ -3,87 +3,6 @@
 
 
 
-void World::gerarmundo() {
-
-    // ===== Gerar Matrix do mundo ====
-    for (int z = 0; z < WORLD_H; z++) {
-        for (int x = 0; x < WORLD_W; x++) {
-            world[z][x].type = TILE_WATER;
-            world[z][x].flags = 0;
-            world[z][x].flags |= TILE_BLOCKED;
-
-
-        }
-    }
-
-    CreateIsland(0, 0, 200, 200, 1.4f, 1.4f);
-
-
-    
-
-
-    // ===== Criar chunks pra render ====
-    int chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    int chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
-
-    chunks.reserve(chunksX * chunksZ);
-
-    for (int cz = 0; cz < chunksZ; cz++) {
-        for (int cx = 0; cx < chunksX; cx++) {
-            Chunk c;
-            c.cx = cx;
-            c.cz = cz;
-            c.built = false;
-            chunks.push_back(c);
-        }
-    }
-
-
-    // ===== Criar TileChunks e copiar do world =====
-    tileChunks.clear();
-    chunkData.clear();
-
-    chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
-
-    for (int cz = 0; cz < chunksZ; cz++) {
-        for (int cx = 0; cx < chunksX; cx++) {
-            TileChunk tc;
-            tc.cx = cx;
-            tc.cz = cz;
-            tc.built = true; // Marque como true, pois já estamos gerando aqui
-
-            for (int z = 0; z < CHUNK_SIZE; z++) {
-                for (int x = 0; x < CHUNK_SIZE; x++) {
-                    int wx = cx * CHUNK_SIZE + x;
-                    int wz = cz * CHUNK_SIZE + z;
-
-                    // Se estiver dentro do mundo, copia do world[][]
-                    if (wx < WORLD_W && wz < WORLD_H) {
-                        tc.tiles[z][x] = world[wz][wx];
-                    } else {
-                        tc.tiles[z][x].type = TILE_WATER;
-                        tc.tiles[z][x].flags = TILE_BLOCKED;
-                    }
-                }
-            }
-
-            // --- AQUI ESTÁ A CORREÇÃO ---
-            // Adiciona tanto no vetor (para compatibilidade com código antigo)
-            tileChunks.push_back(tc);
-            
-            // E TAMBÉM no mapa (para o GetTile funcionar)
-            long long key = ChunkKey(cx, cz);
-            chunkData[key] = tc;
-            // -----------------------------
-        }
-    }
-    mundo_gerado = true;
-
-}
-
-
-
 
 
 
@@ -183,18 +102,9 @@ void World::buildChunkMesh(Chunk& chunk) {
     mesh.normals  = (float*)MemAlloc(vertexCount * 3 * sizeof(float));
     int v = 0, c = 0, n = 0; // ⬅️ declare antes de usar
 
-    int chunksX = (WORLD_W + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    int chunksZ = (WORLD_H + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-    TileChunk* tileChunk = nullptr;
 
-    // usa tileChunks (vetor pré-gerado) apenas se estiver dentro do mundo
-    if (chunk.cx >= 0 && chunk.cx < chunksX && chunk.cz >= 0 && chunk.cz < chunksZ) {
-        tileChunk = &tileChunks[chunk.cz * chunksX + chunk.cx];
-    } else {
-        // fora do mundo => pega do map (criado dinamicamente)
-        tileChunk = GetTileChunk(chunk.cx, chunk.cz);
-    }
+    TileChunk* tileChunk = GetTileChunk(chunk.cx, chunk.cz);
 
     if (!tileChunk) return; // segurança
     for (int z = 0; z < CHUNK_SIZE; z++) {
@@ -245,17 +155,38 @@ void World::buildChunkMesh(Chunk& chunk) {
 }
 
 
-void World::buildTileChunk(TileChunk& chunk) {
-    for (int z = 0; z < CHUNK_SIZE; z++) {
-        for (int x = 0; x < CHUNK_SIZE; x++) {
-            chunk.tiles[z][x].type = TILE_WATER;
-            chunk.tiles[z][x].flags |= TILE_BLOCKED;
-        }
+
+void World::processUnloadQueue(int maxPerFrame) {
+    for (int i = 0; i < maxPerFrame && !unloadQueue.empty(); i++) {
+        Model m = unloadQueue.back();
+        unloadQueue.pop_back();
+
+        UnloadModel(m);
     }
-    chunk.built = true;
+}
+
+void World::processBuildQueue(int maxPerFrame) {
+    for (int i = 0; i < maxPerFrame && !buildQueue.empty(); i++) {
+        int index = buildQueue.back();
+        buildQueue.pop_back();
+
+        Chunk& c = chunks[index];
+
+        buildChunkMesh(c);   // cria Model
+        c.built = true;      // AGORA SIM
+        c.building = false;
+    }
 }
 
 
 
+// Agenda construção de malha
+void World::ensureChunkMeshBuilt(int chunkIndex) {
+    Chunk& c = chunks[chunkIndex];
 
+    if (!c.built && !c.building) {
+        buildQueue.push_back(chunkIndex);
+        c.building = true; // apenas marca como agendado
+    }
+}
 

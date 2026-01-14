@@ -8,7 +8,8 @@
 // ==========================
 //         Constructor
 // ==========================
-StateGame::StateGame()  {
+StateGame::StateGame(std::string nomeM) : world(nomeM)  {
+    this->nomeMundo = nomeM; // Salva na classe depois, se precisar
     mesaEd = new edit_table(&world);
     
     distance = 6.0f;
@@ -21,6 +22,7 @@ StateGame::StateGame()  {
 //         Executa ao ao entrar no estado
 // =============================================
 void StateGame::onEnter() {
+    
     
     shader = LoadShader(TextFormat("resources/shaders/glsl%i/lighting.vs", GLSL_VERSION), TextFormat("resources/shaders/glsl%i/lighting.fs", GLSL_VERSION));
     shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
@@ -142,7 +144,37 @@ void StateGame::draw() {
     DrawText("Glit Engine", 10, 10, 20, WHITE);
 
     DrawFPS(10, 40);
+
+    // RAM
+    char buffer[64];
+    sprintf(buffer, "RAM: %zu MB", GetRAMUsedMB());
+    DrawText(buffer, 10, 70, 20, GREEN);
+
+    // Frame Time
+    float frameMs = GetFrameTime() * 1000.0f;
+    sprintf(buffer, "Frame: %.2f ms", frameMs);
+    DrawText(buffer, 10, 100, 20, GREEN);
+
+
+
+
+
+    Vector3 p = playerObj->position;
+    sprintf(buffer, "Pos: %.1f %.1f %.1f", p.x, p.y, p.z);
+    DrawText(buffer, 10, 130, 20, GREEN);
+
+    sprintf(buffer, "Cam FOV: %.1f", cameraObj->cam.fovy);
+    DrawText(buffer, 10, 160, 20, GREEN);
+
+    DrawText(IsWindowState(FLAG_VSYNC_HINT) ? "VSync: ON" : "VSync: OFF", 10, 190, 20, GREEN);
+
+
+
+
+
+
     mesaEd->draw(selectedObject, transformMode, uiFont);
+
 
     
 

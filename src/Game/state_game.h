@@ -10,8 +10,9 @@
 #include "src/engine/Ui/Ui.h"
 #include "src/engine/Utils/Colisores.h"
 #include "src/Game/Mundo/mundo.h"
+#include "src/engine/Utils/sistema.h"  
 
-
+#include <string>
 
 #define FUNDO (Color){ 63, 63, 63, 255 }
 #define COR_GRID (Color){ 80, 80, 80, 255 }
@@ -24,7 +25,7 @@
 class StateGame : public State {
 public:
 
-    StateGame();
+    StateGame(std::string nomeM = "default");
     void onEnter() override;
     void onExit() override;
 
@@ -38,13 +39,16 @@ public:
 private:
     GameMode transformMode = GameMode::GAME;
 
-    
+    std::string nomeMundo;
+
     CameraObject* cameraObj;
     Player* playerObj;
     World world;
     edit_table* mesaEd;
     Shader shader;
     Light lights[MAX_LIGHTS] = { 0 };
+
+    
     
 
     std::vector<GameObject*> objects; // todos os objetos na cena

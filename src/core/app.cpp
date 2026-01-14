@@ -38,7 +38,7 @@ void principal_loop(){
     
     
 
-    StateGame gameState;
+    StateGame gameState("mundao1");
     
     bool stateEntered = false; // flag para controlar onEnter
 
