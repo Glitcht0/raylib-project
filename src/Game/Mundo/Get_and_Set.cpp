@@ -117,7 +117,7 @@ TileChunk& World::getOrCreateTileChunk(int chunkX, int chunkZ) {
 }
 
 
-
+// Retorna o índice do chunk na lista de chunks. Se não existir, cria um novo.
 int World::getOrCreateMeshChunk(int chunkX, int chunkZ) {
     for (size_t i = 0; i < chunks.size(); i++) {
         if (chunks[i].cx == chunkX && chunks[i].cz == chunkZ)

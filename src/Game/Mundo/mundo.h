@@ -100,13 +100,18 @@ private:
 
    
     void gerarmundo();
-    void CreateIsland(int zpos, int xpos, int largura, int altura, float raio, float elevacao);
+    void CreatIsland(int xpos, int zpos, int largura, int altura);
+    void CreateTerrain(int zpos, int xpos, int largura, int altura, float raio, float elevacao);
+    void InicializaChuncksRender(int largura, int altura);
+    void CopiarTileParaMapa(int largura, int altura);
 
     void buildChunkMesh(Chunk& chunk);
     void processUnloadQueue(int maxPerFrame = 1);
     void processBuildQueue(int maxPerFrame);
     void ensureChunkMeshBuilt(int chunkIndex);
     void ensureSaveDirectories();
+
+    void CarregarAreaInicial(int largura, int altura);
 
 
     int countSameNeighbors(int x, int z);
@@ -119,17 +124,18 @@ private:
     Shader terrainShader;
 
 
-
+    // 🏞️ Mapa para render
     std::vector<Chunk> chunks;         // todos
     std::vector<int> visibleChunks;    // só visíveis
 
-    std::unordered_map<long long, TileChunk> chunkData;
-
-    //std::vector<TileChunk> tileChunks;    // todos
-    std::vector<long long> tileVisibleChunks;   // só visíveis
-
     std::vector<Model> unloadQueue;
     std::vector<int> buildQueue;
+
+    // 🧊 Mapa principal de TileChunks
+    std::unordered_map<long long, TileChunk> chunkData;
+    std::vector<long long> tileVisibleChunks;   // só visíveis
+
+    
 
     long long ChunkKey(int cx, int cz) { return ((long long)cx << 32) | (unsigned int)cz; }
 
@@ -161,7 +167,7 @@ private:
     bool saveChunkToDisk(const TileChunk& tc);
     bool loadChunkFromDisk(int cx, int cz, TileChunk& outChunk);
     
-    // Geração local (substitui o CreateIsland global para funcionar por chunk)
+    // Geração local (substitui o CreateTerrain global para funcionar por chunk)
     void generateSingleChunk(TileChunk& tc);
 
 };

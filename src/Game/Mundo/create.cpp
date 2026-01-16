@@ -6,15 +6,15 @@
 
 
 
-void World::CreateIsland(int zpos, int xpos, int largura, int altura, float raio, float elevacao){
+void World::CreateTerrain(int zpos, int xpos, int largura, int altura, float raio, float elevacao){
     // ===== CLAMP DOS LIMITES DO MUNDO =====
     int zEnd = zpos + altura;
     int xEnd = xpos + largura;
 
     if (zpos < 0) zpos = 0;
     if (xpos < 0) xpos = 0;
-    if (zEnd > WORLD_H) zEnd = WORLD_H;
-    if (xEnd > WORLD_W) xEnd = WORLD_W;
+    if (zEnd > altura) zEnd = altura;
+    if (xEnd > largura) xEnd = largura;
 
 
     // ===== GERA A ILHA =====
@@ -156,37 +156,94 @@ void World::buildChunkMesh(Chunk& chunk) {
 
 
 
-void World::processUnloadQueue(int maxPerFrame) {
-    for (int i = 0; i < maxPerFrame && !unloadQueue.empty(); i++) {
-        Model m = unloadQueue.back();
-        unloadQueue.pop_back();
+// ===== 🏞️ Criar chunks sem malha pra render ====
+void World::InicializaChuncksRender(int largura, int altura){
+    int chunksX = (largura + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int chunksZ = (altura + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-        UnloadModel(m);
-    }
-}
+    chunks.reserve(chunksX * chunksZ);
 
-void World::processBuildQueue(int maxPerFrame) {
-    for (int i = 0; i < maxPerFrame && !buildQueue.empty(); i++) {
-        int index = buildQueue.back();
-        buildQueue.pop_back();
-
-        Chunk& c = chunks[index];
-
-        buildChunkMesh(c);   // cria Model
-        c.built = true;      // AGORA SIM
-        c.building = false;
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            Chunk c;
+            c.cx = cx;
+            c.cz = cz;
+            c.built = false;
+            chunks.push_back(c);
+        }
     }
 }
 
 
+// ==== 🧊 Copia tile chunck para UnoreadMap ====
+void World::CopiarTileParaMapa(int largura, int altura){
+    //tileChunks.clear();
+    chunkData.clear();
 
-// Agenda construção de malha
-void World::ensureChunkMeshBuilt(int chunkIndex) {
-    Chunk& c = chunks[chunkIndex];
+    int chunksX = (largura + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int chunksZ = (altura + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-    if (!c.built && !c.building) {
-        buildQueue.push_back(chunkIndex);
-        c.building = true; // apenas marca como agendado
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            TileChunk tc;
+            tc.cx = cx;
+            tc.cz = cz;
+            tc.built = true; 
+
+            for (int z = 0; z < CHUNK_SIZE; z++) {
+                for (int x = 0; x < CHUNK_SIZE; x++) {
+                    int wx = cx * CHUNK_SIZE + x;
+                    int wz = cz * CHUNK_SIZE + z;
+
+                    // Se estiver dentro do mundo, copia do world[][]
+                    if (wx < largura && wz < altura) {
+                        tc.tiles[z][x] = world[wz][wx];
+                    } else {
+                        tc.tiles[z][x].type = TILE_WATER;
+                        tc.tiles[z][x].flags = TILE_BLOCKED;
+                    }
+                }
+            }
+
+            long long key = ChunkKey(cx, cz);
+            chunkData[key] = tc;
+
+            saveChunkToDisk(tc);
+
+        }
     }
 }
 
+
+
+
+void World::CarregarAreaInicial(int largura, int altura) {
+    chunkData.clear(); // Limpa dados antigos
+
+    int chunksX = (largura + CHUNK_SIZE - 1) / CHUNK_SIZE;
+    int chunksZ = (altura + CHUNK_SIZE - 1) / CHUNK_SIZE;
+
+    printf("Carregando area inicial (%dx%d chunks)...\n", chunksX, chunksZ);
+
+    for (int cz = 0; cz < chunksZ; cz++) {
+        for (int cx = 0; cx < chunksX; cx++) {
+            
+            TileChunk tc;
+            // Tenta carregar do disco
+            if (loadChunkFromDisk(cx, cz, tc)) {
+                // Se achou, salva no mapa principal da memória
+                long long key = ChunkKey(cx, cz);
+                chunkData[key] = tc;
+            } else {
+                // Se o save existe mas esse chunk específico sumiu, gera um vazio/água
+                // (opcional: ou você pode chamar generateSingleChunk(tc) aqui)
+                tc.cx = cx; tc.cz = cz; tc.built = true;
+                generateSingleChunk(tc); 
+                chunkData[ChunkKey(cx, cz)] = tc;
+            }
+        }
+    }
+    
+    // Inicializa a estrutura de visualização (chunks sem malha)
+    InicializaChuncksRender(largura, altura);
+}
