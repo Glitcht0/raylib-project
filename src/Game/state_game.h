@@ -26,6 +26,7 @@ class StateGame : public State {
 public:
 
     StateGame(std::string nomeM = "default");
+    ~StateGame();
     void onEnter() override;
     void onExit() override;
 

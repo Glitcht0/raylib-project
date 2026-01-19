@@ -35,6 +35,8 @@ World::~World() {
     for (Chunk& c : chunks) {
         if (c.built) UnloadModel(c.model);
     }
+
+    
 }
 
 

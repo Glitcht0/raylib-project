@@ -78,7 +78,10 @@ void principal_loop(){
             default:
                 break;
         }
+
     }
+
+
     CloseWindow();
 
 }

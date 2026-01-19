@@ -78,6 +78,7 @@ Player::~Player() {
     delete[] texIdleFront;
     delete[] texRunLeft;
     delete[] texRunRight; // <--- Add
+    world->savePlayerPosition(position);
 }
 
 

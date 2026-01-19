@@ -48,7 +48,10 @@ struct Chunk {
     bool building = false;
 };
 
-
+struct PlayerData {
+    Vector3 position;
+    float halfSize;
+};
 
 class World {
 public:
@@ -70,6 +73,7 @@ public:
     TileChunk* GetTileChunk(int cx, int cz);
     bool Get_walkTileWorld(Vector3 pos, float halfSize);
     Vector3 Get_Spaw(float halfSize);
+    Vector3 loadplayer(float halfSize);
     void getPlayerChunk(Vector3 playerPos, int& cx, int& cz);
     int getOrCreateMeshChunk(int chunkX, int chunkZ);
     //void ensureChunkMeshBuilt(int chunkIndex);
@@ -78,8 +82,11 @@ public:
     void updateChunks(Vector3 playerPos);
     void updateTileChunks(Vector3 playerPos);
     void unloadFarChunks(Vector3 playerPos);
+    void savePlayerPosition(Vector3 position);
 
     void setShader(Shader s);
+
+    PlayerData jogador;
 
     
 
@@ -110,6 +117,10 @@ private:
     void processBuildQueue(int maxPerFrame);
     void ensureChunkMeshBuilt(int chunkIndex);
     void ensureSaveDirectories();
+
+    
+
+    
 
     void CarregarAreaInicial(int largura, int altura);
 

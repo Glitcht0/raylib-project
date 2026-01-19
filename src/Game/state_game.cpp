@@ -49,12 +49,17 @@ void StateGame::onEnter() {
 
     playerObj = new Player(cameraObj, &world);
     playerObj->worldObjects = &objects;
-    playerObj->position = world.Get_Spaw(0.7f);
+    playerObj->position = world.loadplayer(0.7f);
 
 
 
 }
 
+StateGame::~StateGame() {
+    if (playerObj != nullptr) {
+        onExit();
+    }
+}
 
 // =============================================
 //         Executa ao ao Sair no estado
