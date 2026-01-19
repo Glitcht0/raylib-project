@@ -63,9 +63,13 @@ void World::setShader(Shader s) {
 // Retorna ponteiro para o TileChunk. Se não existir, cria um vazio.
 TileChunk* World::GetTileChunk(int cx, int cz) {
     long long key = ChunkKey(cx, cz);
+    auto it = chunkData.find(key);
+
+    if (it != chunkData.end()) {
+        return &it->second;
+    }
     
-    // Se o chunk ainda não existe no mapa, ele é criado automaticamente pelo operator []
-    return &chunkData[key];
+    return nullptr; // Se não achou, retorna nulo. Não cria nada falso.
 }
 
 

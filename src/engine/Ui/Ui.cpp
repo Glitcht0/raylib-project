@@ -197,35 +197,48 @@ void floatInput::bind(float* v) {
 void DrawMiniMap(World* world, Vector2 pos, float size) {
     if (!world) return;
 
-    
+    // Se seu mundo for infinito, você talvez queira mudar isso para renderizar 
+    // ao redor do player. Por enquanto, mantive fixo no tamanho do mundo.
     int h = WORLD_H;
     int w = WORLD_W;
 
-    
-
-    float tileSize = size / (float)w; // mapa quadrado
+    float tileSize = size / (float)w; 
 
     for (int z = 0; z < h; z++) {
         for (int x = 0; x < w; x++) {
 
-            Color c = DARKGRAY;
+            // --- CORREÇÃO AQUI ---
+            // Em vez de acessar a array, pedimos o Tile ao gerenciador de chunks
+            Tile* tile = world->GetTile(x, z);
 
-            switch (world->world[z][x].type) {
-                case TILE_GRASS: c = GREEN; break;
-                case TILE_DIRT:  c = BROWN; break;
-                case TILE_WATER: c = BLUE;  break;
-                case TILE_SAND: c = YELLOW;  break;
+            // Se tile for nullptr, significa que o chunk não foi gerado/carregado ainda.
+            // Pulamos para não crachar o jogo.
+            Color c = DARKGRAY;
+            if (tile == nullptr) {
+                c = BLUE;
+            }else{
+                switch (tile->type) {
+                    case TILE_GRASS: c = GREEN; break;
+                    case TILE_DIRT:  c = BROWN; break;
+                    case TILE_WATER: c = BLUE;  break;
+                    case TILE_SAND:  c = YELLOW; break;
+                    default: c = MAGENTA; break; // Debug para tipos desconhecidos
+                }
             }
 
+            
+
+            
+
+            // Sua lógica de rotação original (mantive igual)
             int dx = z;
             int dz = w - 1 - x;
 
-            DrawRectangle( pos.x + dx * tileSize, pos.y + dz * tileSize, tileSize + 1, tileSize + 1, c);
-
-
+            // Dica: DrawRectangleRec é ligeiramente mais rápido que DrawRectangle
+            DrawRectangle(pos.x + dx * tileSize, pos.y + dz * tileSize, tileSize + 1, tileSize + 1, c);
         }
     }
 
-    // borda
+    // Borda do minimapa
     DrawRectangleLines(pos.x, pos.y, size, size, WHITE);
 }

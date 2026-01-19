@@ -79,6 +79,7 @@ void World::CreateTerrain(int zpos, int xpos, int largura, int altura, float rai
     applyRules(zpos, xpos, largura, altura);
     applyRules(zpos, xpos, largura, altura);
     applyRules(zpos, xpos, largura, altura);
+    applyRules(zpos, xpos, largura, altura);
 }
 
 

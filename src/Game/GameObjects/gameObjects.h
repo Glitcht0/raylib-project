@@ -7,8 +7,12 @@
 
 enum PlayerState {
     IDLE_FRONT,
-    WALK_RIGHT,
-    WALK_LEFT,
+    IDLE_LEFT,
+    IDLE_RIGHT,
+    RUN_LEFT,
+    RUN_RIGHT,
+    WALK_FRONT,
+    WALK_BACK,
     RUN,
     ATTACK,
     INTERACT
@@ -94,6 +98,9 @@ public:
     float facingAngle;   // pra onde ele "olha"
     PlayerState state;
     float playerRadius = 0.3f;
+    Vector2 lastDir = { 0, -1 }; // começa olhando pra baixo
+
+
 
 
     CameraObject* cameraObj;
@@ -117,14 +124,21 @@ public:
     void DrawSprite3DInclinado( Texture2D texture, Rectangle source, Vector3 position, Vector2 size, float rotY, float tiltX, Color tint);
 
 private:
+    // ===== 🎃 0 Cria Variaveis =====
     Texture2D* texIdleFront;
     Texture2D* texRunLeft;
     Texture2D* texRunRight;
+    Texture2D* texWalkFront;
+    Texture2D* texIdleLeft;
+    Texture2D* texIdleRight;
 
     // Nossas definições de animação
     SpriteAnimation animIdleFront;
     SpriteAnimation animRunLeft;
     SpriteAnimation animRunRight;
+    SpriteAnimation animWalkFront;
+    SpriteAnimation animIdleLeft;
+    SpriteAnimation animIdleRight;
 
     // Ponteiro para a animação atual
     SpriteAnimation* currentAnim = nullptr;

@@ -92,7 +92,7 @@ void World::requestChunkLoad(int cx, int cz) {
 //       Salva e Carrega Chunks do Disco
 // ====================================================================
 bool World::saveChunkToDisk(const TileChunk& tc) {
-    std::string filename = "saves/" + nomeMundo + "/chunk_" + std::to_string(tc.cx) + "_" + std::to_string(tc.cz) + ".dat";
+    std::string filename = "saves/" + nomeMundo + "/chunks/chunk_" + std::to_string(tc.cx) + "_" + std::to_string(tc.cz) + ".dat";
     
     // Garanta que a pasta "saves" exista antes (faça isso no main ou init)
     FILE* f = fopen(filename.c_str(), "wb");
@@ -107,7 +107,7 @@ bool World::saveChunkToDisk(const TileChunk& tc) {
 
 
 bool World::loadChunkFromDisk(int cx, int cz, TileChunk& outChunk) {
-    std::string filename = "saves/" + nomeMundo + "/chunk_" + std::to_string(cx) + "_" + std::to_string(cz) + ".dat";
+    std::string filename = "saves/" + nomeMundo + "/chunks/chunk_" + std::to_string(cx) + "_" + std::to_string(cz) + ".dat";
     
     FILE* f = fopen(filename.c_str(), "rb");
     if (!f) return false; // Arquivo não existe

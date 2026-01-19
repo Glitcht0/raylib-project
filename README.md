@@ -39,8 +39,6 @@ O mundo do jogo é gerado proceduralmente usando o algoritmo de Perlin Noise par
 ```
 git add .
 git commit -m "Save Player position"
-```
-
 git push -u origin main     
 ```
 

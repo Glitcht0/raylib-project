@@ -102,7 +102,7 @@ void World::updateChunks(Vector3 playerPos) {
 
 // ===== Gera o mundo, ou carrega do disco se existir save =====
 void World::gerarmundo() {
-    std::string savePath = "saves/" + nomeMundo;
+    std::string savePath = "saves/" + nomeMundo + "/chunks/";
     bool saveEncontrado = false;
 
 

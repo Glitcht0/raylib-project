@@ -5,7 +5,7 @@
 // ============================================================================
 Vector3 World::loadplayer(float halfSize){
     Vector3 posicao;
-    std::string filename = "saves/" + nomeMundo + "/player"  + ".dat";
+    std::string filename = "saves/" + nomeMundo + "/players/player"  + ".dat";
     
     FILE* f = fopen(filename.c_str(), "rb");
     if (!f) {
@@ -31,7 +31,7 @@ Vector3 World::loadplayer(float halfSize){
 // ============================================================================
 void World::savePlayerPosition(Vector3 position){
     jogador.position = position;
-    std::string filename = "saves/" + nomeMundo + "/player"  + ".dat";
+    std::string filename = "saves/" + nomeMundo + "/players/player"  + ".dat";
     
     FILE* f = fopen(filename.c_str(), "wb");
     if (!f) {

@@ -16,11 +16,15 @@ Player::Player(CameraObject* camera, World* w) {
 
 
 
-    // ===== CARREGA ANIMAÇÃO IDLE =====
+    // ===== 🎃 1 Aloca =====
     texIdleFront = new Texture2D[23];
     texRunLeft = new Texture2D[11];
     texRunRight = new Texture2D[11];
+    texWalkFront = new Texture2D[11];
+    texIdleLeft = new Texture2D[11];
+    texIdleRight = new Texture2D[11];
 
+    // ===== 🎃 2 Carrega =====
     for (int i = 0; i < 23; i++) {
         char path[128];
         sprintf(path, "assets/Glitcht/Parado_frente/quadro%04d.png", i);
@@ -39,8 +43,26 @@ Player::Player(CameraObject* camera, World* w) {
         texRunRight[i] = LoadTexture(path);
         SetTextureFilter(texRunRight[i], TEXTURE_FILTER_BILINEAR);
     }
+    for (int i = 0; i < 11; i++) {
+        char path[128];
+        sprintf(path, "assets/Glitcht/andando_frente/quadro%04d.png", i);
+        texWalkFront[i] = LoadTexture(path);
+        SetTextureFilter(texWalkFront[i], TEXTURE_FILTER_BILINEAR);
+    }
+    for (int i = 0; i < 11; i++) {
+        char path[128];
+        sprintf(path, "assets/Glitcht/Parado_Esquerda/quadro%04d.png", i);
+        texIdleLeft[i] = LoadTexture(path);
+        SetTextureFilter(texIdleLeft[i], TEXTURE_FILTER_BILINEAR);
+    }
+    for (int i = 0; i < 11; i++) {
+        char path[128];
+        sprintf(path, "assets/Glitcht/Parado_direita/quadro%04d.png", i);
+        texIdleRight[i] = LoadTexture(path);
+        SetTextureFilter(texIdleRight[i], TEXTURE_FILTER_BILINEAR);
+    }
 
-    // 3. Configurar as Structs de Animação
+    // ===== 🎃 3 Configurar as Structs de Animação =====
     animIdleFront.frames = texIdleFront;
     animIdleFront.frameCount = 23;
     animIdleFront.fps = 12.0f;
@@ -52,6 +74,19 @@ Player::Player(CameraObject* camera, World* w) {
     animRunRight.frames = texRunRight;
     animRunRight.frameCount = 11;
     animRunRight.fps = 12.0f;
+
+    animWalkFront.frames = texWalkFront;
+    animWalkFront.frameCount = 11;
+    animWalkFront.fps = 24.0f;
+
+    animIdleLeft.frames = texIdleLeft;
+    animIdleLeft.frameCount = 11;
+    animIdleLeft.fps = 12.0f;
+
+    animIdleRight.frames = texIdleRight;
+    animIdleRight.frameCount = 11;
+    animIdleRight.fps = 12.0f;
+
 
     // Começa com Idle
     currentAnim = &animIdleFront;
@@ -70,14 +105,18 @@ void Player::SetAnimation(SpriteAnimation* newAnim) {
 
 Player::~Player() {
     // Descarregar texturas
+    
+    // ===== 🎃 4 Descarrega =====
     for (int i = 0; i < 23; i++) UnloadTexture(texIdleFront[i]);
     for (int i = 0; i < 11; i++) UnloadTexture(texRunLeft[i]);
     for (int i = 0; i < 11; i++) UnloadTexture(texRunRight[i]); // <--- Add
+    for (int i = 0; i < 11; i++) UnloadTexture(texWalkFront[i]);
 
-    // Liberar os arrays
+    // ===== 🎃 5 Libera arrays =====
     delete[] texIdleFront;
     delete[] texRunLeft;
     delete[] texRunRight; // <--- Add
+    delete[] texWalkFront;
     world->savePlayerPosition(position);
 }
 
@@ -105,10 +144,10 @@ void Player::draw() {
 
     //DrawBoundingBox(GetBoundingBoxAt(position), GREEN);
 
-    float radius = playerRadius;
-    float height = 1.3f;
+    //float radius = playerRadius;
+    //float height = 1.3f;
 
-    DrawCylinderWires(position, radius, radius, height, 16, GREEN);
+    //DrawCylinderWires(position, radius, radius, height, 16, GREEN);
 
     Texture2D tex = currentAnim->frames[currentFrame];
     float size = 1.3f;
@@ -258,34 +297,50 @@ void Player::HandleMovement(Vector2 input, float dt) {
 }
 
 
-
-
 void Player::UpdateAnimationState(Vector2 input) {
-    if (Vector2Length(input) == 0) {
-        SetAnimation(&animIdleFront);
-    } 
-    else {
-        float angle = atan2f(input.x, input.y); 
-        float deg = angle * RAD2DEG;
 
-        // Região "CIMA" (Costas)
-        if (deg > -45 && deg < 45) {
-             SetAnimation(&animIdleFront); // TODO: animRunBack
+    if (Vector2Length(input) > 0) {
+        input = Vector2Normalize(input);
+        lastDir = input;
+
+        // 1️⃣ QUALQUER componente lateral → lado
+        if (fabsf(input.x) > 0.2f) {
+            if (input.x > 0) {
+                SetAnimation(&animRunRight);
+                state = RUN_RIGHT;
+            } else {
+                SetAnimation(&animRunLeft);
+                state = RUN_LEFT;
+            }
         }
-        // Região "DIREITA"
-        else if (deg >= 45 && deg < 135) {
-             SetAnimation(&animRunRight);
+        // 2️⃣ Só frente se for baixo puro
+        else if (input.y < -0.2f) {
+            SetAnimation(&animWalkFront);
+            state = WALK_FRONT;
         }
-        // Região "ESQUERDA"
-        else if (deg <= -45 && deg > -135) {
-             SetAnimation(&animRunLeft);
-        }
-        // Região "BAIXO" (Frente)
+        // 3️⃣ Só costas se for cima puro
         else {
-             SetAnimation(&animIdleFront); // TODO: animRunFront
+            SetAnimation(&animIdleFront); // depois animWalkBack
+            state = WALK_BACK;
         }
+        return;
     }
+
+    // === PARADO ===
+    if (fabsf(lastDir.x) > 0.2f) {
+        if (lastDir.x > 0) SetAnimation(&animIdleRight);
+        else SetAnimation(&animIdleLeft);
+    }
+    else if (lastDir.y < -0.2f) {
+        SetAnimation(&animIdleFront);
+    }
+    else {
+        SetAnimation(&animIdleFront); // idle costas depois
+    }
+
+    state = IDLE_FRONT;
 }
+
 
 void Player::TickAnimation(float dt) {
     if (currentAnim) {
