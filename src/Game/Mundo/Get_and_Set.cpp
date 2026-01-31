@@ -100,26 +100,42 @@ void World::getPlayerChunk(Vector3 playerPos, int& cx, int& cz) {
 }
 
 
+// Função ajustada para carregar do disco se possível
 TileChunk& World::getOrCreateTileChunk(int chunkX, int chunkZ) {
     long long key = ChunkKey(chunkX, chunkZ);
-    TileChunk& tc = chunkData[key];
+    
+    // 1. Tenta achar na memória RAM primeiro
+    auto it = chunkData.find(key);
+    if (it != chunkData.end()) {
+        return it->second;
+    }
 
+    // 2. Se não está na memória, cria a entrada no mapa
+    TileChunk& tc = chunkData[key];
     tc.cx = chunkX;
     tc.cz = chunkZ;
 
-    if (!tc.built) {
-        for (int z = 0; z < CHUNK_SIZE; z++) {
-            for (int x = 0; x < CHUNK_SIZE; x++) {
-                tc.tiles[z][x].type = TILE_WATER;
-                tc.tiles[z][x].flags |= TILE_BLOCKED;
+    // 3. Tenta CARREGAR DO DISCO antes de criar um vazio!
+    // Isso garante que se já existir uma ilha salva ali, ela será preservada.
+    if (loadChunkFromDisk(chunkX, chunkZ, tc)) {
+        tc.built = true; 
+        // printf("Chunk (%d, %d) restaurado para modificação.\n", chunkX, chunkZ);
+    } 
+    else {
+        // 4. Se realmente não existe save desse chunk, preenche com água (default)
+        if (!tc.built) {
+            for (int z = 0; z < CHUNK_SIZE; z++) {
+                for (int x = 0; x < CHUNK_SIZE; x++) {
+                    tc.tiles[z][x].type = TILE_WATER;
+                    tc.tiles[z][x].flags |= TILE_BLOCKED;
+                }
             }
+            tc.built = true;
         }
-        tc.built = true;
     }
 
     return tc;
 }
-
 
 // Retorna o índice do chunk na lista de chunks. Se não existir, cria um novo.
 int World::getOrCreateMeshChunk(int chunkX, int chunkZ) {

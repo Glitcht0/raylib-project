@@ -15,7 +15,7 @@
 
 
 void principal_loop(){
-    appstate currentState = STATE_GAME;
+    appstate currentState = STATE_MENU;
     SetConfigFlags(FLAG_MSAA_4X_HINT);
     SetConfigFlags(FLAG_VSYNC_HINT);
 
@@ -38,7 +38,7 @@ void principal_loop(){
     
     
 
-    StateGame gameState("mundao1");
+    StateGame gameState("mundao2");
     
     bool stateEntered = false; // flag para controlar onEnter
 

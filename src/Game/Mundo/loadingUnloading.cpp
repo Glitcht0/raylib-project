@@ -87,7 +87,10 @@ bool World::saveChunkToDisk(const TileChunk& tc) {
     
     // Garanta que a pasta "saves" exista antes (faça isso no main ou init)
     FILE* f = fopen(filename.c_str(), "wb");
-    if (!f) return false;
+    if (!f){
+        printf("ERRO: Nao foi possivel salvar o chunk em: %s (Verifique se a pasta existe)\n", filename.c_str());
+        return false;
+    } 
 
     // Salva a struct inteira de uma vez
     fwrite(tc.tiles, sizeof(Tile), CHUNK_SIZE * CHUNK_SIZE, f);
@@ -118,17 +121,26 @@ bool World::loadChunkFromDisk(int cx, int cz, TileChunk& outChunk) {
 // Garante que as pastas de salvamento existam
 // ====================================================================
 void World::ensureSaveDirectories() {
+    // Define os caminhos
     fs::path base = "saves";
     fs::path worldPath = base / nomeMundo;
-    printf("Verificando pasta de save: %s\n", nomeMundo.c_str());
+    fs::path chunksPath = worldPath / "chunks";   
+    fs::path playersPath = worldPath / "players"; 
 
-    // create_directories retorna false se a pasta já existir, 
-    // mas não dá erro. É seguro e limpo.
+    printf("Verificando estrutura de pastas para: %s\n", nomeMundo.c_str());
+
     try {
-        fs::create_directories(worldPath);
-        printf("Pasta de save criada: %s\n", worldPath.string().c_str());
+        // create_directories cria toda a árvore necessária se não existir
+        if (fs::create_directories(chunksPath)) {
+            printf("Pasta criada: %s\n", chunksPath.string().c_str());
+        }
+        
+        if (fs::create_directories(playersPath)) {
+            printf("Pasta criada: %s\n", playersPath.string().c_str());
+        }
+
     } catch (const fs::filesystem_error& e) {
-        printf("Erro ao criar pasta de save: %s\n", e.what());
+        printf("ERRO CRITICO ao criar pastas de save: %s\n", e.what());
     }
 }
 
@@ -196,13 +208,15 @@ void World::processBuildQueue(int maxPerFrame) {
 
 
 // 🏞️ Descarrega chunks muito distantes do player, somente as meshs (Chunks)
-void World::unloadFarChunks(Vector3 playerPos) {
+void World::unloadFarChunks(Vector3 playerPos, int maxUnloads) {
     int cx = (int)floor(playerPos.x / CHUNK_SIZE);
     int cz = (int)floor(playerPos.z / CHUNK_SIZE);
 
     int deleteDistance = VIEW_DISTANCE + 4;
+    int unloadsCount = 0;
 
     for (size_t i = 0; i < chunks.size(); ) {
+        if (unloadsCount >= maxUnloads)break;
         Chunk& c = chunks[i];
 
         int distX = abs(c.cx - cx);
@@ -225,6 +239,7 @@ void World::unloadFarChunks(Vector3 playerPos) {
             // remove da lógica imediatamente
             chunks[i] = chunks.back();
             chunks.pop_back();
+            unloadsCount++;
         } 
         else {
             i++;

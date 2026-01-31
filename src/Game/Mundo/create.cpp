@@ -13,8 +13,10 @@ void World::CreateTerrain(int zpos, int xpos, int largura, int altura, float rai
 
     if (zpos < 0) zpos = 0;
     if (xpos < 0) xpos = 0;
-    if (zEnd > altura) zEnd = altura;
-    if (xEnd > largura) xEnd = largura;
+
+    if (zEnd > WORLD_H) zEnd = WORLD_H; 
+    if (xEnd > WORLD_W) xEnd = WORLD_W;
+
 
 
     // ===== GERA A ILHA =====
@@ -176,46 +178,57 @@ void World::InicializaChuncksRender(int largura, int altura){
 }
 
 
-// ==== 🧊 Copia tile chunck para UnoreadMap ====
-void World::CopiarTileParaMapa(int largura, int altura){
-    //tileChunks.clear();
-    chunkData.clear();
 
-    int chunksX = (largura + CHUNK_SIZE - 1) / CHUNK_SIZE;
-    int chunksZ = (altura + CHUNK_SIZE - 1) / CHUNK_SIZE;
+// Função inteligente que pega apenas um pedaço do 'world' e salva nos chunks
+void World::AtualizarESalvarRegiao(int xpos, int zpos, int largura, int altura) {
+    
+    // 1. Calcula quais chunks foram afetados por essa ilha
+    int startCX = xpos / CHUNK_SIZE;
+    int startCZ = zpos / CHUNK_SIZE;
+    int endCX   = (xpos + largura + CHUNK_SIZE - 1) / CHUNK_SIZE; // Arredonda pra cima
+    int endCZ   = (zpos + altura + CHUNK_SIZE - 1) / CHUNK_SIZE;
 
-    for (int cz = 0; cz < chunksZ; cz++) {
-        for (int cx = 0; cx < chunksX; cx++) {
-            TileChunk tc;
-            tc.cx = cx;
-            tc.cz = cz;
-            tc.built = true; 
+    // 2. Percorre APENAS os chunks envolvidos
+    for (int cz = startCZ; cz < endCZ; cz++) {
+        for (int cx = startCX; cx < endCX; cx++) {
+            
+            
+            TileChunk& tc = getOrCreateTileChunk(cx, cz); // Pega ou cria o chunk na memória
+        
+            
+            bool mudouAlgo = false;  // Flag para saber se precisamos salvar este chunk no disco
 
+            // 3. Atualiza os tiles DENTRO deste chunk
             for (int z = 0; z < CHUNK_SIZE; z++) {
                 for (int x = 0; x < CHUNK_SIZE; x++) {
-                    int wx = cx * CHUNK_SIZE + x;
-                    int wz = cz * CHUNK_SIZE + z;
+                    
+                    // Coordenada Global do Tile
+                    int worldX = cx * CHUNK_SIZE + x;
+                    int worldZ = cz * CHUNK_SIZE + z;
 
-                    // Se estiver dentro do mundo, copia do world[][]
-                    if (wx < largura && wz < altura) {
-                        tc.tiles[z][x] = world[wz][wx];
-                    } else {
-                        tc.tiles[z][x].type = TILE_WATER;
-                        tc.tiles[z][x].flags = TILE_BLOCKED;
+                    // Verifica se esse tile está dentro da região da ilha que acabamos de gerar
+                    if (worldX >= xpos && worldX < xpos + largura &&
+                        worldZ >= zpos && worldZ < zpos + altura) {
+                        
+                        // Verifica limites globais (pra não estourar o array world)
+                        if (worldX < WORLD_W && worldZ < WORLD_H) {
+                            // COPIA DA PRANCHETA PARA O CHUNK
+                            tc.tiles[z][x] = world[worldZ][worldX];
+                            mudouAlgo = true;
+                        }
                     }
                 }
             }
 
-            long long key = ChunkKey(cx, cz);
-            chunkData[key] = tc;
-
-            saveChunkToDisk(tc);
-
+            // 4. Se o chunk foi modificado, salva no disco imediatamente
+            if (mudouAlgo) {
+                saveChunkToDisk(tc);
+                // Opcional: Se já houver mesh visual gerada, marcar para recriar
+                // chunks[getOrCreateMeshChunk(cx, cz)].built = false; 
+            }
         }
     }
 }
-
-
 
 
 void World::CarregarAreaInicial(int largura, int altura) {
@@ -311,7 +324,14 @@ TileType World::mostCommonNeighbor(int x, int z) {
 }
 
 
-
+void World::LimparBufferComAgua() {
+    for (int z = 0; z < WORLD_H; z++) {
+        for (int x = 0; x < WORLD_W; x++) {
+            world[z][x].type = TILE_WATER;
+            world[z][x].flags = TILE_BLOCKED;
+        }
+    }
+}
 
 
 int World::countSameNeighbors(int x, int z) {

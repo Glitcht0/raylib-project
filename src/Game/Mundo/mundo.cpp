@@ -35,7 +35,7 @@ void World::update(Vector3 playerPos) {
 
     processLoadedChunks();
 
-    unloadFarChunks(playerPos);
+    unloadFarChunks(playerPos, 2);
     updateChunks(playerPos);
 
 
@@ -109,7 +109,13 @@ void World::gerarmundo() {
     } 
     else {
         printf("--- NENHUM SAVE: GERANDO NOVO MUNDO ---\n");
-        CreatIsland(0, 0, WORLD_W, WORLD_H); // Gera do zero (código antigo)
+        CreatIsland(0, 0, 100, 100); // Gera do zero 
+        CreatIsland(100, 100, 100, 100);
+        CreatIsland(100, 0, 50, 50);
+
+        InicializaChuncksRender(WORLD_W, WORLD_H);
+
+
     }
 
     mundo_gerado = true;
@@ -117,28 +123,31 @@ void World::gerarmundo() {
 
 
 
-void World::CreatIsland(int xpos, int zpos, int largura, int altura){
+void World::CreatIsland(int xpos, int zpos, int largura, int altura) {
+    printf("--- Criando Ilha em (%d, %d) tamanho %dx%d ---\n", xpos, zpos, largura, altura);
 
-    // ===== Gerar Matrix do mundo incial, ao redor do player ====
-    for (int z = 0; z < altura; z++) {
-        for (int x = 0; x < largura; x++) {
-            world[z][x].type = TILE_WATER;
-            world[z][x].flags = 0;
-            world[z][x].flags |= TILE_BLOCKED;
+    // 1. PREPARAÇÃO DA PRANCHETA (Limpeza Local)
+    // Preenchemos a região alvo no 'world' com água antes de desenhar a terra.
+    // Isso garante que o Perlin Noise não misture com lixo de memória anterior.
+    int zEnd = (zpos + altura > WORLD_H) ? WORLD_H : zpos + altura;
+    int xEnd = (xpos + largura > WORLD_W) ? WORLD_W : xpos + largura;
 
-
+    for (int z = zpos; z < zEnd; z++) {
+        for (int x = xpos; x < xEnd; x++) {
+            if (z >= 0 && x >= 0) { // Safety check
+                world[z][x].type = TILE_WATER;
+                world[z][x].flags = TILE_BLOCKED;
+            }
         }
     }
 
     
-    CreateTerrain(xpos, zpos, WORLD_W, WORLD_H, 1.4f, 1.4f);
+    CreateTerrain(zpos, xpos, largura, altura, 1.4f, 1.4f); // 2. GERAÇÃO (Desenha na prancheta 'world')
 
-    // ===== 🏞️ Criar chunks pra render ====
-    InicializaChuncksRender(WORLD_W, WORLD_H);
+    
+    AtualizarESalvarRegiao(xpos, zpos, largura, altura); // 3. CONSOLIDAÇÃO (Copia do 'world' para Chunks e Salva)
 
-    // ===== 🧊 Criar TileChunks e copiar do world =====
-    CopiarTileParaMapa(WORLD_W, WORLD_H);
-
+    printf("--- Ilha Salva no Disco ---\n");
 }
 
 

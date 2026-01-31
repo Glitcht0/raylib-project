@@ -164,7 +164,7 @@ private:
 
     // --- Gerenciamento de Chunks ---
     void updateChunks(Vector3 playerPos);     // Decide quem carrega/descarrega
-    void unloadFarChunks(Vector3 playerPos);  // Remove quem está longe
+    void unloadFarChunks(Vector3 playerPos, int maxUnloads = 1);  // Remove quem está longe
     
     void processUnloadQueue(int maxPerFrame = 1);
     void processBuildQueue(int maxPerFrame);
@@ -172,18 +172,20 @@ private:
     int  getOrCreateMeshChunk(int chunkX, int chunkZ);
     void ensureChunkMeshBuilt(int chunkIndex);
     void buildChunkMesh(Chunk& chunk);
+    
 
     // --- Geração de Terreno ---
     void gerarmundo(); // Orquestrador principal
     void CreatIsland(int xpos, int zpos, int largura, int altura);
     void CreateTerrain(int zpos, int xpos, int largura, int altura, float raio, float elevacao);
     void applyRules(int zpos, int xpos, int largura, int altura); // Autotile/Suavização
+    void LimparBufferComAgua();
+    void AtualizarESalvarRegiao(int xpos, int zpos, int largura, int altura);
     
     // Auxiliares de Geração
     int      countSameNeighbors(int x, int z);
     TileType mostCommonNeighbor(int x, int z);
     void     InicializaChuncksRender(int largura, int altura);
-    void     CopiarTileParaMapa(int largura, int altura);
     void     CarregarAreaInicial(int largura, int altura);
 
     // --- Sistema de Arquivos e Threads ---
