@@ -3,17 +3,12 @@
 
 
 World::World(std::string nomeM): perlin(time(nullptr)) {
-    
 
     nomeMundo = nomeM;
     
     ensureSaveDirectories();
     chunkData.clear();
     gerarmundo();
-
-
-
-    
 
 }
 
@@ -22,7 +17,6 @@ World::~World() {
     for (auto& pair : chunkData) {
         saveChunkToDisk(pair.second);
     }
-
 
     
     // Limpeza das meshes
@@ -55,6 +49,9 @@ void World::draw() {
         }
     }
 }
+
+
+
 
 
 // ===== Atualiza quais chunks devem estar carregados com base na posição do player ====

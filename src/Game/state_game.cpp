@@ -69,7 +69,12 @@ void StateGame::onExit() {
     for (GameObject* obj : objects){
         delete obj;
     }   
-        
+    
+    if (estruturas != nullptr) {
+        delete estruturas;
+        estruturas = nullptr;
+    }
+
     delete playerObj;
     playerObj = nullptr;
 
