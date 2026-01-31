@@ -3,6 +3,7 @@
 #include "rlgl.h"
 #include "raymath.h"
 #include <vector> 
+#include <string>
 #include "src/Game/Mundo/mundo.h"
 
 enum PlayerState {
@@ -33,8 +34,6 @@ public:
     virtual BoundingBox GetBoundingBox() const = 0;
 };
 
-
-
 class Cube : public GameObject {
 public:
     Vector3 size;
@@ -51,10 +50,6 @@ public:
 
     BoundingBox GetBoundingBox() const override;
 };
-
-
-
-
 
 class CameraObject : public GameObject {
 public:
@@ -82,57 +77,44 @@ public:
 
 
 
-// No header (Player.h ou gameObjects.h)
 struct SpriteAnimation {
-    Texture2D* frames; // Ponteiro para o array de texturas
-    int frameCount;    // Quantos frames essa animação tem
-    float fps;         // Velocidade específica dessa animação
+    Texture2D atlas;              // A textura GIGANTE (compartilhada)
+    std::vector<Rectangle> frames; // As coordenadas de cada quadro na textura gigante
+    float fps;
 };
-
 
 class Player : public GameObject {
 public:
+    // ... (Variáveis de física continuam iguais) ...
     Vector3 velocity;
     float speed;
-
-    float facingAngle;   // pra onde ele "olha"
+    float facingAngle;
     PlayerState state;
     float playerRadius = 0.3f;
-    Vector2 lastDir = { 0, -1 }; // começa olhando pra baixo
-
-
-
+    Vector2 lastDir = { 0, -1 };
 
     CameraObject* cameraObj;
     std::vector<GameObject*>* worldObjects = nullptr;
 
-
-    BoundingBox GetBoundingBox() const override;
-    BoundingBox GetBoundingBoxAt(Vector3 pos) const; 
-    bool CheckCollisionCircleAABB_XZ( Vector3 center, float radius,const BoundingBox& box);
-    
+    // Construtor e destrutor
     Player(CameraObject* camera, World* w);
-
     ~Player();
 
-
-
+    // Métodos
     void update(float dt) override;
     void draw() override;
     void SetAnimation(SpriteAnimation* newAnim);
+    void DrawSprite3DInclinado(Texture2D texture, Rectangle source, Vector3 position, Vector2 size, float rotY, float tiltX, Color tint);
 
-    void DrawSprite3DInclinado( Texture2D texture, Rectangle source, Vector3 position, Vector2 size, float rotY, float tiltX, Color tint);
+    // Colisão
+    BoundingBox GetBoundingBox() const override;
+    BoundingBox GetBoundingBoxAt(Vector3 pos) const;
+    bool CheckCollisionCircleAABB_XZ(Vector3 center, float radius, const BoundingBox& box);
 
 private:
-    // ===== 🎃 0 Cria Variaveis =====
-    Texture2D* texIdleFront;
-    Texture2D* texRunLeft;
-    Texture2D* texRunRight;
-    Texture2D* texWalkFront;
-    Texture2D* texIdleLeft;
-    Texture2D* texIdleRight;
+    Texture2D atlasTexture; // A imagem "glitcht_animation.png"
 
-    // Nossas definições de animação
+
     SpriteAnimation animIdleFront;
     SpriteAnimation animRunLeft;
     SpriteAnimation animRunRight;
@@ -140,17 +122,19 @@ private:
     SpriteAnimation animIdleLeft;
     SpriteAnimation animIdleRight;
 
-    // Ponteiro para a animação atual
     SpriteAnimation* currentAnim = nullptr;
-
     World* world;
 
     float animTimer = 0.0f;
-    int currentFrame = 0;
+    size_t currentFrame = 0;
 
     void HandleMovement(Vector2 input, float dt);
     void UpdateAnimationState(Vector2 input);
     void TickAnimation(float dt);
 
+    // Helper para carregar os frames do JSON
+    // json_data é um tipo genérico (void*) aqui para não sujar o header com bibliotecas externas,
+    // mas no .cpp faremos o cast correto.
+    void LoadFramesFromJSON(void* jsonData, const std::string& prefix, int count, int startFrame, SpriteAnimation& anim);
 };
 

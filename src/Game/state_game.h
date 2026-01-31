@@ -11,6 +11,7 @@
 #include "src/engine/Utils/Colisores.h"
 #include "src/Game/Mundo/mundo.h"
 #include "src/engine/Utils/sistema.h"  
+#include "src/Game/Estruturas/Estruturas.h"
 
 #include <string>
 
@@ -45,6 +46,7 @@ private:
     CameraObject* cameraObj;
     Player* playerObj;
     World world;
+    structures* estruturas;
     edit_table* mesaEd;
     Shader shader;
     Light lights[MAX_LIGHTS] = { 0 };

@@ -9,6 +9,7 @@
 #include <vector>
 
 
+
 #include <thread>
 #include <mutex>
 #include <atomic>
@@ -145,6 +146,9 @@ private:
     // 🧊 Mapa principal de TileChunks
     std::unordered_map<long long, TileChunk> chunkData;
     std::vector<long long> tileVisibleChunks;   // só visíveis
+
+
+    
 
     
 

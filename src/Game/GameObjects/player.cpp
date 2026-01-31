@@ -1,5 +1,10 @@
 #include "gameObjects.h"
 #include <iostream>
+#include <fstream>
+#include "libs/json.hpp"
+
+using json = nlohmann::json;
+
 
 
 Player::Player(CameraObject* camera, World* w) {
@@ -15,83 +20,83 @@ Player::Player(CameraObject* camera, World* w) {
     currentFrame = 0;
 
 
+    // Carrega a imagem gigante
+    atlasTexture = LoadTexture("assets/Glitcht/glitcht_animation.dds");
+    SetTextureFilter(atlasTexture, TEXTURE_FILTER_BILINEAR);
 
-    // ===== 🎃 1 Aloca =====
-    texIdleFront = new Texture2D[23];
-    texRunLeft = new Texture2D[11];
-    texRunRight = new Texture2D[11];
-    texWalkFront = new Texture2D[11];
-    texIdleLeft = new Texture2D[11];
-    texIdleRight = new Texture2D[11];
-
-    // ===== 🎃 2 Carrega =====
-    for (int i = 0; i < 23; i++) {
-        char path[128];
-        sprintf(path, "assets/Glitcht/Parado_frente/quadro%04d.png", i);
-        texIdleFront[i] = LoadTexture(path);
-        SetTextureFilter(texIdleFront[i], TEXTURE_FILTER_BILINEAR);
+    // Carrega o arquivo JSON
+    std::ifstream f("assets/Glitcht/glitcht_animation.json");
+    if (!f.is_open()) {
+        std::cerr << "ERRO: Nao foi possivel abrir o JSON da animacao!" << std::endl;
     }
-    for (int i = 0; i < 11; i++) {
-        char path[128];
-        sprintf(path, "assets/Glitcht/andando_Esquerda/quadro%04d.png", i);
-        texRunLeft[i] = LoadTexture(path);
-        SetTextureFilter(texRunLeft[i],  TEXTURE_FILTER_BILINEAR);
-    }
-    for (int i = 0; i < 11; i++) {
-        char path[128];
-        sprintf(path, "assets/Glitcht/andando_direita/quadro%04d.png", i);
-        texRunRight[i] = LoadTexture(path);
-        SetTextureFilter(texRunRight[i], TEXTURE_FILTER_BILINEAR);
-    }
-    for (int i = 0; i < 11; i++) {
-        char path[128];
-        sprintf(path, "assets/Glitcht/andando_frente/quadro%04d.png", i);
-        texWalkFront[i] = LoadTexture(path);
-        SetTextureFilter(texWalkFront[i], TEXTURE_FILTER_BILINEAR);
-    }
-    for (int i = 0; i < 11; i++) {
-        char path[128];
-        sprintf(path, "assets/Glitcht/Parado_Esquerda/quadro%04d.png", i);
-        texIdleLeft[i] = LoadTexture(path);
-        SetTextureFilter(texIdleLeft[i], TEXTURE_FILTER_BILINEAR);
-    }
-    for (int i = 0; i < 11; i++) {
-        char path[128];
-        sprintf(path, "assets/Glitcht/Parado_direita/quadro%04d.png", i);
-        texIdleRight[i] = LoadTexture(path);
-        SetTextureFilter(texIdleRight[i], TEXTURE_FILTER_BILINEAR);
+    
+    json data;
+    try {
+        f >> data; // O parse acontece aqui
+    } catch (json::parse_error& e) {
+        std::cerr << "ERRO de Parse no JSON: " << e.what() << std::endl;
     }
 
-    // ===== 🎃 3 Configurar as Structs de Animação =====
-    animIdleFront.frames = texIdleFront;
-    animIdleFront.frameCount = 23;
-    animIdleFront.fps = 12.0f;
+    // ===== 2. CONFIGURAR AS ANIMAÇÕES =====
+    // Configura FPS e Textura base
+    animIdleFront.atlas = atlasTexture; animIdleFront.fps = 12.0f;
+    animRunLeft.atlas   = atlasTexture; animRunLeft.fps = 12.0f;
+    animRunRight.atlas  = atlasTexture; animRunRight.fps = 12.0f;
+    animWalkFront.atlas = atlasTexture; animWalkFront.fps = 24.0f;
+    animIdleLeft.atlas  = atlasTexture; animIdleLeft.fps = 12.0f;
+    animIdleRight.atlas = atlasTexture; animIdleRight.fps = 12.0f;
 
-    animRunLeft.frames = texRunLeft;
-    animRunLeft.frameCount = 11;
-    animRunLeft.fps = 12.0f; // Correr pode ser mais rápido!
+    // Carrega os frames lendo do JSON
 
-    animRunRight.frames = texRunRight;
-    animRunRight.frameCount = 11;
-    animRunRight.fps = 12.0f;
 
-    animWalkFront.frames = texWalkFront;
-    animWalkFront.frameCount = 11;
-    animWalkFront.fps = 24.0f;
-
-    animIdleLeft.frames = texIdleLeft;
-    animIdleLeft.frameCount = 11;
-    animIdleLeft.fps = 12.0f;
-
-    animIdleRight.frames = texIdleRight;
-    animIdleRight.frameCount = 11;
-    animIdleRight.fps = 12.0f;
-
+    LoadFramesFromJSON(&data, "Parado_frente/quadro",    23, 0, animIdleFront);
+    LoadFramesFromJSON(&data, "andando_Esquerda/quadro", 11, 0, animRunLeft);
+    LoadFramesFromJSON(&data, "andando_direita/quadro",  11, 0, animRunRight);
+    LoadFramesFromJSON(&data, "andando_frente/quadro",   11, 0, animWalkFront);
+    LoadFramesFromJSON(&data, "Parado_Esquerda/quadro",  11, 0, animIdleLeft);
+    LoadFramesFromJSON(&data, "Parado_direita/quadro",   11, 0, animIdleRight);
 
     // Começa com Idle
     currentAnim = &animIdleFront;
 }
 
+
+
+// Função auxiliar para ler o JSON e preencher o vetor de Rectangles
+void Player::LoadFramesFromJSON(void* jsonData, const std::string& prefix, int count, int startFrame, SpriteAnimation& anim) {
+    json* data = (json*)jsonData;
+    
+
+    
+    json& framesObj = (*data)["frames"]; 
+
+    for (int i = 0; i < count; i++) {
+       
+        char buffer[128];  // Monta o nome da chave: ex "Parado_frente/quadro0000.png"
+
+        sprintf(buffer, "%s%04d.png", prefix.c_str(), startFrame + i); 
+        std::string key = std::string(buffer);
+
+        if (framesObj.contains(key)) {
+            auto& frameData = framesObj[key]["frame"];
+            float x = frameData["x"];
+            float y = frameData["y"];
+            float w = frameData["w"];
+            float h = frameData["h"];
+
+             
+            anim.frames.push_back( (Rectangle){x, y, w, h} ); // Adiciona na lista da animação
+        } else {
+            anim.frames.push_back({0,0,0,0}); 
+        }
+    }
+}
+
+Player::~Player() {
+    UnloadTexture(atlasTexture);
+    
+    world->savePlayerPosition(position);
+}
 
 // Lógica segura para trocar animação
 void Player::SetAnimation(SpriteAnimation* newAnim) {
@@ -103,22 +108,7 @@ void Player::SetAnimation(SpriteAnimation* newAnim) {
 }
 
 
-Player::~Player() {
-    // Descarregar texturas
-    
-    // ===== 🎃 4 Descarrega =====
-    for (int i = 0; i < 23; i++) UnloadTexture(texIdleFront[i]);
-    for (int i = 0; i < 11; i++) UnloadTexture(texRunLeft[i]);
-    for (int i = 0; i < 11; i++) UnloadTexture(texRunRight[i]); // <--- Add
-    for (int i = 0; i < 11; i++) UnloadTexture(texWalkFront[i]);
 
-    // ===== 🎃 5 Libera arrays =====
-    delete[] texIdleFront;
-    delete[] texRunLeft;
-    delete[] texRunRight; // <--- Add
-    delete[] texWalkFront;
-    world->savePlayerPosition(position);
-}
 
 
 void Player::update(float dt) {
@@ -140,29 +130,28 @@ void Player::update(float dt) {
 
 
 void Player::draw() {
-    if (!currentAnim) return;
+    if (!currentAnim || currentAnim->frames.empty()) return;
+   
 
-    //DrawBoundingBox(GetBoundingBoxAt(position), GREEN);
+    if (currentFrame >= currentAnim->frames.size()) currentFrame = 0;
 
-    //float radius = playerRadius;
-    //float height = 1.3f;
+    Rectangle src = currentAnim->frames[currentFrame];
+    
 
-    //DrawCylinderWires(position, radius, radius, height, 16, GREEN);
-
-    Texture2D tex = currentAnim->frames[currentFrame];
-    float size = 1.3f;
-
-    float aspect = (float)tex.height / (float)tex.width;
-    Rectangle src = { 0, 0, (float)tex.width, (float)tex.height };
-
+    float targetHeight = 1.3f; // Altura desejada em metros (ex: 1.80m)
+    //DrawCylinderWires(position, playerRadius, playerRadius, targetHeight, 16, GREEN);
+    
+    // Calcula a proporção inversa (Largura / Altura)
+    float aspectInv = 1.0f;
+    if (src.height > 0) aspectInv = src.width / src.height;
+    
+    // Agora definimos a largura baseada na altura fixa
+    Vector2 sizeVec = { targetHeight * aspectInv, targetHeight };
 
     float rotToCamera = atan2f(cameraObj->cam.position.x - position.x, cameraObj->cam.position.z - position.z);
-    DrawSprite3DInclinado( tex, src, position, (Vector2){ size, size * aspect }, rotToCamera, DEG2RAD * -10.0f, WHITE );
-
-    DrawSphere(position, 0.05f, GREEN);
+    
+    DrawSprite3DInclinado(currentAnim->atlas, src, position, sizeVec, rotToCamera, DEG2RAD * -10.0f, WHITE);
 }
-
-
 
 void Player::DrawSprite3DInclinado( Texture2D texture, Rectangle source, Vector3 position, Vector2 size, float rotY, float tiltX, Color tint) {
     rlPushMatrix();
@@ -343,13 +332,14 @@ void Player::UpdateAnimationState(Vector2 input) {
 
 
 void Player::TickAnimation(float dt) {
-    if (currentAnim) {
+    if (currentAnim && !currentAnim->frames.empty()) {
         animTimer += dt;
         if (animTimer >= 1.0f / currentAnim->fps) {
             animTimer = 0.0f;
             currentFrame++;
             
-            if (currentFrame >= currentAnim->frameCount) {
+            // Usa .size() do vetor agora
+            if (currentFrame >= currentAnim->frames.size()) {
                 currentFrame = 0; 
             }
         }

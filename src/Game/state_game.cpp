@@ -11,6 +11,7 @@
 StateGame::StateGame(std::string nomeM) : world(nomeM)  {
     this->nomeMundo = nomeM; // Salva na classe depois, se precisar
     mesaEd = new edit_table(&world);
+    estruturas = new structures();
     
     distance = 6.0f;
     yaw = 135.0f * DEG2RAD;
@@ -105,6 +106,7 @@ void StateGame::update(appstate* currentState) {
     
     handleInput(); // Entrada de teclado para mudar modos e selecionar objetos aqui aonde vai ficar a ações dos botões
     updateAll();
+    
 
 
 
@@ -137,8 +139,11 @@ void StateGame::draw() {
     for (GameObject* obj : objects){
         obj->draw();
     }
+
+    estruturas->draw();
     
     cameraObj->draw();
+
     
 
     EndShaderMode();
