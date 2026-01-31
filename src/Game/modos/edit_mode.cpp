@@ -58,7 +58,7 @@ void StateGame::updateOBBSelection(){
         Cube* cube = dynamic_cast<Cube*>(obj);
         if (!cube) continue;
 
-        if (RayIntersectsOBB(ray, cube->position, cube->rotation, cube->size)) {
+        if (RayIntersectsOBB(ray, cube->position, cube->rotation, cube->scale)) {
             selected = cube;
             break;
         }

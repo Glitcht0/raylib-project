@@ -2,6 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include "libs/json.hpp"
+#include "src/Game/Estruturas/Estruturas.h"
 
 using json = nlohmann::json;
 
@@ -244,30 +245,18 @@ void Player::HandleMovement(Vector2 input, float dt) {
 
         // === COLISÃO ===
         // Checa colisão X e Z
-        if (worldObjects) {
-            for (GameObject* obj : *worldObjects) {
-                if (!obj->HasCollision()) continue;
+        if (worldStructures) {
+            // Verifica eixo X
+            if (worldStructures->CheckCollision(nextPosX, playerRadius)) {
+                blockedX = true;
+            }
 
-                BoundingBox box = obj->GetBoundingBox();
-
-                if (!blockedX) {
-                    Vector3 testPos = position;
-                    testPos.x = nextPosX.x;
-
-                    if (CheckCollisionCircleAABB_XZ(testPos, playerRadius, box))
-                        blockedX = true;
-                }
-
-                if (!blockedZ) {
-                    Vector3 testPos = position;
-                    testPos.z = nextPosZ.z;
-
-                    if (CheckCollisionCircleAABB_XZ(testPos, playerRadius, box))
-                        blockedZ = true;
-                }
-
-                if (blockedX && blockedZ)
-                    break;
+            // Verifica eixo Z (usando a posição original de X para permitir deslizar)
+            Vector3 testZ = position; 
+            testZ.z = nextPosZ.z;
+            
+            if (worldStructures->CheckCollision(testZ, playerRadius)) {
+                blockedZ = true;
             }
         }
 

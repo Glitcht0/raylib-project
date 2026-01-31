@@ -38,7 +38,8 @@ O mundo do jogo é gerado proceduralmente usando o algoritmo de Perlin Noise par
 #### - dar comit
 ```
 git add .
-git commit -m "animation states added"
+git commit -m "negocio"
+
 git push -u origin main     
 ```
 

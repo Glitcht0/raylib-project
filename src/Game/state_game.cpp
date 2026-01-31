@@ -11,7 +11,7 @@
 StateGame::StateGame(std::string nomeM) : world(nomeM)  {
     this->nomeMundo = nomeM; // Salva na classe depois, se precisar
     mesaEd = new edit_table(&world);
-    estruturas = new structures();
+    
     
     distance = 6.0f;
     yaw = 135.0f * DEG2RAD;
@@ -24,7 +24,7 @@ StateGame::StateGame(std::string nomeM) : world(nomeM)  {
 // =============================================
 void StateGame::onEnter() {
     
-    
+    estruturas = new structures(nomeMundo);
     shader = LoadShader(TextFormat("resources/shaders/glsl%i/lighting.vs", GLSL_VERSION), TextFormat("resources/shaders/glsl%i/lighting.fs", GLSL_VERSION));
     shader.locs[SHADER_LOC_VECTOR_VIEW] = GetShaderLocation(shader, "viewPos");
     ambientLoc = GetShaderLocation(shader, "ambient");
@@ -49,7 +49,7 @@ void StateGame::onEnter() {
     //objects.push_back(new Cube((Vector3){0, -0.01f, 0}, (Vector3){10, 0.01f, 10}, LIGHTGRAY)); // Chão
 
     playerObj = new Player(cameraObj, &world);
-    playerObj->worldObjects = &objects;
+    playerObj->worldStructures = estruturas;
     playerObj->position = world.loadplayer(0.7f);
 
 

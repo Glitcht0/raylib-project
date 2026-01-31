@@ -11,9 +11,7 @@ World::World(std::string nomeM): perlin(time(nullptr)) {
     chunkData.clear();
     gerarmundo();
 
-    // Inicia a thread de carregamento
-    threadRunning = true;
-    chunkLoaderThread = std::thread(&World::loaderThreadLoop, this);
+
 
     
 
@@ -25,11 +23,7 @@ World::~World() {
         saveChunkToDisk(pair.second);
     }
 
-    // 2. Parar a thread
-    threadRunning = false;
-    if (chunkLoaderThread.joinable()) {
-        chunkLoaderThread.join();
-    }
+
     
     // Limpeza das meshes
     for (Chunk& c : chunks) {

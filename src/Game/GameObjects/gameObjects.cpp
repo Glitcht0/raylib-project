@@ -6,8 +6,8 @@
 
 Cube::Cube(Vector3 pos, Vector3 sz, Color col) {
     position = pos;
-    size = sz;
-    color = col;
+    scale = sz;     
+    color = col;    
     rotation = { 0, 0, 0};
 }
 
@@ -30,11 +30,11 @@ void Cube::draw(){
     rlRotatef(rotation.x, 1, 0, 0);
     rlRotatef(rotation.z, 0, 0, 1);
     
-    DrawCube((Vector3){ 0.0f, 0.0f, 0.0f }, size.x, size.y, size.z, color);
+    DrawCube((Vector3){ 0.0f, 0.0f, 0.0f }, scale.x, scale.y, scale.z, color);
 
 
     if (is_selected) {
-        DrawCubeWires((Vector3){ 0.0f, 0.0f, 0.0f }, size.x + 0.01f, size.y + 0.01f, size.z + 0.01f, ORANGE);
+        DrawCubeWires((Vector3){ 0.0f, 0.0f, 0.0f }, scale.x + 0.01f, scale.y + 0.01f, scale.z + 0.01f, ORANGE);
     }
 
     rlPopMatrix();
@@ -43,14 +43,14 @@ void Cube::draw(){
 BoundingBox Cube::GetBoundingBox() const {
     BoundingBox box;
     box.min = {
-        position.x - size.x * 0.5f,
-        position.y - size.y * 0.5f,
-        position.z - size.z * 0.5f
+        position.x - scale.x * 0.5f,
+        position.y - scale.y * 0.5f,
+        position.z - scale.z * 0.5f
     };
     box.max = {
-        position.x + size.x * 0.5f,
-        position.y + size.y * 0.5f,
-        position.z + size.z * 0.5f
+        position.x + scale.x * 0.5f,
+        position.y + scale.y * 0.5f,
+        position.z + scale.z * 0.5f
     };
     return box;
 }

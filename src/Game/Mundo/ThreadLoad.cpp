@@ -1,91 +1,82 @@
 #include "mundo.h"
-
+#include "src/engine/ThreadPool/ThreadPoll.h" // <--- Inclua a Pool aqui
+#include <algorithm> // para std::find
 #include <filesystem>
 namespace fs = std::filesystem;
 
+
+
 // ====================================================================
-// 🧵 SISTEMA DE THREADS PARA CARREGAMENTO ASSÍNCRONO DE CHUNKS
+// Pedir para carregar um Chunk (Executado na Main Thread)
 // ====================================================================
-void World::loaderThreadLoop() {
-    while (threadRunning) {
-        ChunkRequest req;
-        bool hasRequest = false;
+void World::requestChunkLoad(int cx, int cz) {
+    long long key = ChunkKey(cx, cz);
 
-        // 🔒 Bloqueia para verificar se tem trabalho
-        {
-            std::lock_guard<std::mutex> lock(queueMutex);
-            if (!pendingRequests.empty()) {
-                req = pendingRequests.front();
-                pendingRequests.pop_front();
-                hasRequest = true;
-            }
+    // 1. Verifica se já está carregando esse chunk para não duplicar tarefas
+    //    (Isso evita pedir o mesmo chunk 60 vezes por segundo)
+    {
+        std::lock_guard<std::mutex> lock(resultMutex);
+        for (long long k : chunksBeingProcessed) {
+            if (k == key) return; // Já está na fila, sai fora
         }
+        chunksBeingProcessed.push_back(key); // Marca como "em progresso"
+    }
 
-        if (hasRequest) {
-            TileChunk tc;
-            tc.cx = req.cx;
-            tc.cz = req.cz;
-            tc.built = true;
+    // 2. Envia a tarefa para a ThreadPool Global
+    ThreadPool::Get().enqueue([this, cx, cz]() {
+        this->generateOrLoadTask(cx, cz);
+    });
+}
 
-            // 1. Tenta carregar do disco
-            if (!loadChunkFromDisk(req.cx, req.cz, tc)) {
-                // 2. Se falhar (arquivo não existe), GERA o terreno
-                generateSingleChunk(tc);
-                
-                // Opcional: Salvar imediatamente para não gerar de novo
-                // saveChunkToDisk(tc); 
-            }
+// ====================================================================
+// A Tarefa Pesada (Executado por uma Thread da Pool)
+// ====================================================================
+void World::generateOrLoadTask(int cx, int cz) {
+    TileChunk tc;
+    tc.cx = cx;
+    tc.cz = cz;
+    tc.built = true;
 
-            // 🔒 Devolve para a Main Thread
-            {
-                std::lock_guard<std::mutex> lock(queueMutex);
-                loadedChunks.push_back(tc);
-            }
-        } 
-        else {
-            // Dorme um pouco para não fritar a CPU se não tiver trabalho
-            std::this_thread::sleep_for(std::chrono::milliseconds(5));
-        }
+    // Tenta carregar do disco, se falhar, gera
+    if (!loadChunkFromDisk(cx, cz, tc)) {
+        generateSingleChunk(tc);
+        // Opcional: Salvar logo após gerar
+        // saveChunkToDisk(tc); 
+    }
+
+    // ENTREGAR O RESULTADO
+    // Precisamos bloquear o mutex pois 'loadedChunks' é lido pelo Main
+    {
+        std::lock_guard<std::mutex> lock(resultMutex);
+        loadedChunks.push_back(tc);
     }
 }
 
 // ====================================================================
-// Processa chunks carregados pela thread e os insere no mapa principal
+// Receber os Chunks Prontos (Executado na Main Thread no update)
 // ====================================================================
 void World::processLoadedChunks() {
-    std::lock_guard<std::mutex> lock(queueMutex);
+    std::lock_guard<std::mutex> lock(resultMutex);
     
     while (!loadedChunks.empty()) {
         TileChunk tc = loadedChunks.front();
         loadedChunks.pop_front();
 
-        // Insere no mapa principal (Agora o chunk existe oficialmente no jogo)
+        // 1. Adiciona ao mapa oficial do jogo
         long long key = ChunkKey(tc.cx, tc.cz);
         chunkData[key] = tc;
+
+        // 2. Remove da lista de "em processamento"
+        // (Isso permite que o chunk seja pedido de novo no futuro se for descarregado)
+        for (auto it = chunksBeingProcessed.begin(); it != chunksBeingProcessed.end(); ) {
+            if (*it == key) {
+                it = chunksBeingProcessed.erase(it);
+            } else {
+                ++it;
+            }
+        }
     }
 }
-
-
-// ====================================================================
-// Pede para a thread carregar/gerar um chunk
-// ====================================================================
-void World::requestChunkLoad(int cx, int cz) {
-    std::lock_guard<std::mutex> lock(queueMutex);
-    
-    // Verifica se já não foi pedido (para não pedir 2x o mesmo chunk)
-    for (const auto& req : pendingRequests) {
-        if (req.cx == cx && req.cz == cz) return;
-    }
-    
-    // Verifica se já não está na fila de entrega (acabou de carregar mas update não rodou ainda)
-    for (const auto& tc : loadedChunks) {
-        if (tc.cx == cx && tc.cz == cz) return;
-    }
-
-    pendingRequests.push_back({cx, cz});
-}
-
-
 
 
 // ====================================================================

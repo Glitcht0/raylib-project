@@ -157,32 +157,27 @@ private:
 
 
     
-    // ===== 🧵 SISTEMA DE THREADS =====
+    // ===== 🧵 SISTEMA DE THREADS (MODIFICADO) =====
     
-    // Flag para manter a thread viva
-    std::atomic<bool> threadRunning;
-    std::thread chunkLoaderThread;
-    std::mutex queueMutex; // Protege o acesso às filas
+    // Mutex apenas para proteger a lista de resultados (loadedChunks) e de pedidos ativos
+    std::mutex resultMutex;
 
-    // Estrutura para pedir um chunk
-    struct ChunkRequest {
-        int cx, cz;
-    };
+    // Fila de retorno: A thread coloca aqui, o Main pega aqui
+    std::deque<TileChunk> loadedChunks; 
+    
+    // Conjunto para rastrear o que JÁ ESTÁ sendo carregado (para não spammar a ThreadPool)
+    std::vector<long long> chunksBeingProcessed; 
 
-    // Filas de comunicação
-    std::deque<ChunkRequest> pendingRequests; // Main -> Thread
-    std::deque<TileChunk> loadedChunks;       // Thread -> Main
-
-    // Funções do sistema de arquivos e thread
-    void loaderThreadLoop(); // Loop da thread
+    // Funções atualizadas
     void requestChunkLoad(int cx, int cz);
     void processLoadedChunks();
     
+    // Geração/Load Interno (usado pelas threads)
+    void generateOrLoadTask(int cx, int cz); 
+
     // Salvar e Carregar
     bool saveChunkToDisk(const TileChunk& tc);
     bool loadChunkFromDisk(int cx, int cz, TileChunk& outChunk);
-    
-    // Geração local (substitui o CreateTerrain global para funcionar por chunk)
     void generateSingleChunk(TileChunk& tc);
 
 };

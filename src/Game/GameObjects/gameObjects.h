@@ -19,10 +19,14 @@ enum PlayerState {
     INTERACT
 };
 
+class structures;
+
 class GameObject{
 public:
     Vector3 position;
     Vector3 rotation;
+    Vector3 scale;
+    Color color;
 
     bool is_selected = false;
     
@@ -36,8 +40,7 @@ public:
 
 class Cube : public GameObject {
 public:
-    Vector3 size;
-    Color color;
+
 
     Cube(Vector3 pos, Vector3 sz, Color col);
 
@@ -94,7 +97,8 @@ public:
     Vector2 lastDir = { 0, -1 };
 
     CameraObject* cameraObj;
-    std::vector<GameObject*>* worldObjects = nullptr;
+    //std::vector<GameObject*>* worldObjects = nullptr;
+    structures* worldStructures = nullptr;
 
     // Construtor e destrutor
     Player(CameraObject* camera, World* w);
