@@ -1,6 +1,7 @@
 #include "src/core/state_machine.h"
 #include "raylib.h"
 #include "src/Game/state_game.h"
+#include "src/Menu/state_menu.h"
 #include "src/engine/i18n/i18n.h"
 
 #define RLIGHTS_IMPLEMENTATION
@@ -26,6 +27,9 @@ void principal_loop(){
 
 
     InitWindow(LARGURA_TELA, ALTURA_TELA, "Raylib 3D - Exemplo simples");
+    SetExitKey(KEY_NULL);
+
+
     SetTargetFPS(60);
     GuiLoadStyleAmber();
 
@@ -37,8 +41,10 @@ void principal_loop(){
 
     
     
+    std::string nomeMundo;
+    StateGame *gameState = nullptr;
+    StateMenu menuState;
 
-    StateGame gameState("mundao2");
     
     bool stateEntered = false; // flag para controlar onEnter
 
@@ -46,15 +52,26 @@ void principal_loop(){
         switch (currentState)
         {
             case STATE_MENU:
-                BeginDrawing();
-                ClearBackground(BLACK);
 
-                mensagemBox(&currentState);
 
-                EndDrawing();
+
+                if (!stateEntered) {
+                    menuState.onEnter(); // entra no estado apenas uma vez
+                    stateEntered = true;
+                }
+
+                menuState.update(&currentState);
+                menuState.draw();
+
+                if (currentState != STATE_MENU) { // saiu do estado
+                    nomeMundo = menuState.GetNomeMundo();
+                    menuState.onExit();
+                    stateEntered = false;
+                }
+                break;
 
             
-                break;
+            
 
             case STATE_CONFIG:
                 
@@ -62,15 +79,20 @@ void principal_loop(){
 
             case STATE_GAME:
                 if (!stateEntered) {
-                    gameState.onEnter(); // entra no estado apenas uma vez
+                    if(!gameState){
+                        gameState = new StateGame(nomeMundo);
+                    }
+                    gameState->onEnter(); // entra no estado apenas uma vez
                     stateEntered = true;
                 }
 
-                gameState.update(&currentState);
-                gameState.draw();
+                gameState->update(&currentState);
+                gameState->draw();
 
                 if (currentState != STATE_GAME) { // saiu do estado
-                    gameState.onExit();
+                    gameState->onExit();
+                    delete gameState;
+                    gameState = nullptr;
                     stateEntered = false;
                 }
                 break;
@@ -92,17 +114,3 @@ void principal_loop(){
 
 
 
-void mensagemBox(appstate *currentState){
-    
-    float boxWidth = 350, boxHeight = 200;
-
-    Rectangle box = { (LARGURA_TELA - boxWidth) / 2.0f , (ALTURA_TELA  - boxHeight) / 2.0f, boxWidth, boxHeight };
-
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
-
-     
-    int result = GuiMessageBox( box, T("MSG_TITLE"),T("MSG_BODY"), T("BTN_AVISO") );
-
-    if (result >= 0)
-        *currentState = STATE_GAME;
-}
