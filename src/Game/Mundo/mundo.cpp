@@ -105,7 +105,7 @@ void World::gerarmundo() {
 
     if (saveEncontrado) {
         printf("--- SAVE ENCONTRADO: CARREGANDO DO DISCO ---\n");
-        CarregarAreaInicial(WORLD_W, WORLD_H); // Carrega a área inicial (mesmo tamanho que você usaria para criar a ilha)
+        //CarregarAreaInicial(WORLD_W, WORLD_H); // Carrega a área inicial (mesmo tamanho que você usaria para criar a ilha)
     } 
     else {
         printf("--- NENHUM SAVE: GERANDO NOVO MUNDO ---\n");
@@ -113,7 +113,7 @@ void World::gerarmundo() {
         CreatIsland(100, 100, 100, 100);
         CreatIsland(100, 0, 50, 50);
 
-        InicializaChuncksRender(WORLD_W, WORLD_H);
+        //InicializaChuncksRender(WORLD_W, WORLD_H);
 
 
     }

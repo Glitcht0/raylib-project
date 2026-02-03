@@ -7,6 +7,8 @@
 #include "libs/raygui.h"
 #include "src/engine/i18n/i18n.h"
 #include "src/engine/Data/Data.h"
+#include <cmath>
+
 
 enum MenuState{
     MENU,
@@ -40,8 +42,8 @@ public:
 private:
     std::vector<MundoData> mundos;
     appstate* estadoAtual;
-    void DrawButtonsMenu();
-    void DrawMundosLista();
+    void DrawButtonsMenu(float larguraTela, float alturaTela);
+    void DrawMundosLista(float larguraTela, float alturaTela);
     void CreateMundo();
     MenuState EstadoMenu = MENU;
     

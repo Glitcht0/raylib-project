@@ -10,6 +10,14 @@ struct MundoData{
 };
 
 
+struct GameData{
+    std::string nomeJoador;
+    std::string Linguagem;
+
+    float volume;
+    bool Vsing;
+};
+
 
 void carregar_mundos(std::vector<MundoData> *mundos);
 void criar_mundo(MundoData *mundo);

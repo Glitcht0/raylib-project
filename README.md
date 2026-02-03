@@ -38,7 +38,7 @@ O mundo do jogo é gerado proceduralmente usando o algoritmo de Perlin Noise par
 #### - dar comit
 ```
 git add .
-git commit -m "Ui"
+git commit -m "Janela"
 git push -u origin main     
 ```
 

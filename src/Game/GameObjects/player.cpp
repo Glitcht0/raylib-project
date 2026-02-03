@@ -115,6 +115,7 @@ void Player::SetAnimation(SpriteAnimation* newAnim) {
 void Player::update(float dt) {
     // 1. Captura o Input
     Vector2 input = { 0, 0 };
+    
     if (IsKeyDown(KEY_W)) input.y += 1;
     if (IsKeyDown(KEY_S)) input.y -= 1;
     if (IsKeyDown(KEY_A)) input.x -= 1;
@@ -234,43 +235,51 @@ void Player::HandleMovement(Vector2 input, float dt) {
         move.z = camForward.z * input.y + camRight.z * input.x;
 
         //Novas possiões, pro x e pro Z
+
+        float speedMult = IsKeyDown(KEY_Z) ? 4.0f : 1.0f; // TODO tirar em game - botão turbo
+        
+
         Vector3 nextPosX = position;
-        nextPosX.x += move.x * speed * dt;
+        nextPosX.x += move.x * speed * speedMult* dt;
         bool blockedX = false;
 
         Vector3 nextPosZ = position;
-        nextPosZ.z += move.z * speed * dt;
+        nextPosZ.z += move.z * speed * speedMult* dt;
         bool blockedZ = false;
 
 
         // === COLISÃO ===
         // Checa colisão X e Z
-        if (worldStructures) {
+        if(!IsKeyDown(KEY_Z)){ //TODO tirar isso
+            if (worldStructures) { 
             // Verifica eixo X
-            if (worldStructures->CheckCollision(nextPosX, playerRadius)) {
+                if (worldStructures->CheckCollision(nextPosX, playerRadius)) {
+                    blockedX = true;
+                }
+
+                // Verifica eixo Z (usando a posição original de X para permitir deslizar)
+                Vector3 testZ = position; 
+                testZ.z = nextPosZ.z;
+                
+                if (worldStructures->CheckCollision(testZ, playerRadius)) {
+                    blockedZ = true;
+                }
+            }
+
+
+            //Verifica Tile Bloqueado
+            if (!blockedX && !world->Get_walkTileWorld(nextPosX, 0.3f))
                 blockedX = true;
-            }
 
-            // Verifica eixo Z (usando a posição original de X para permitir deslizar)
-            Vector3 testZ = position; 
-            testZ.z = nextPosZ.z;
-            
-            if (worldStructures->CheckCollision(testZ, playerRadius)) {
+            if (!blockedZ && !world->Get_walkTileWorld(nextPosZ, 0.3f))
                 blockedZ = true;
-            }
+
+
+          
         }
-
-
-        //Verifica Tile Bloqueado
-        if (!blockedX && !world->Get_walkTileWorld(nextPosX, 0.3f))
-            blockedX = true;
-
-        if (!blockedZ && !world->Get_walkTileWorld(nextPosZ, 0.3f))
-            blockedZ = true;
-
-
         if (!blockedX) position.x = nextPosX.x;
         if (!blockedZ) position.z = nextPosZ.z;
+        
     }
 }
 

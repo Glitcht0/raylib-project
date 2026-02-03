@@ -26,11 +26,13 @@ void StateMenu::update(appstate* currentState){
 void StateMenu::draw(){
     BeginDrawing();
     ClearBackground(BLACK);
+    float larguraTela = GetRenderWidth();
+    float alturaTela = GetRenderHeight();
 
     
     
     if (EstadoMenu==MENU){
-        DrawButtonsMenu();
+        DrawButtonsMenu(larguraTela, alturaTela);
         /*
         DrawButtonsDemo();
         DrawInputsDemo();
@@ -41,7 +43,7 @@ void StateMenu::draw(){
     }
 
     if (EstadoMenu == CARREGAR){
-        DrawMundosLista();
+        DrawMundosLista(larguraTela, alturaTela);
     }
 
     if(EstadoMenu == CRIAR){
@@ -56,22 +58,32 @@ void StateMenu::draw(){
 
 
 
-void StateMenu::DrawButtonsMenu(){
-    //GuiGroupBox((Rectangle){ 50, 200, 180, 160 }, "Buttons");
-    float Largura_Tela = GetRenderWidth();
-    //float Altura_Tela = GetRenderHeight();
-    float Meio_tela = (Largura_Tela/2) - 70;
+void StateMenu::DrawButtonsMenu(float larguraTela, float alturaTela){
+    
+    float sx = larguraTela / 1280.0f;
+    float sy = alturaTela / 720.0f;
+    float s = (sx < sy) ? sx : sy;
 
-    if (GuiButton((Rectangle){ Meio_tela, 300, 140, 30 }, T("Menu1"))) {
+    float btnW = 140 * s;
+    float btnH = 30 * s;
+    float x = larguraTela/2 - btnW/2;
+
+    float y0 = 300 * s;
+    float dy = 40 * s;
+
+    if (GuiButton({ x, y0 + 0*dy, btnW, btnH }, T("Menu1"))) {
         EstadoMenu = CARREGAR;
         carregar_mundos(&mundos);
     }
-    if (GuiButton((Rectangle){ Meio_tela, 340, 140, 30 }, T("Menu2"))) {
+    if (GuiButton({ x, y0 + 1*dy, btnW, btnH }, T("Menu2"))) {
         EstadoMenu = CRIAR;
-        
     }
-    if (GuiButton((Rectangle){ Meio_tela, 380, 140, 30 }, T("Menu3"))) {}
-    if (GuiButton((Rectangle){ Meio_tela, 420, 140, 30 }, T("Menu4"))) {*estadoAtual = STATE_EXIT;}
+    if (GuiButton({ x, y0 + 2*dy, btnW, btnH }, T("Menu3"))) {}
+    if (GuiButton({ x, y0 + 3*dy, btnW, btnH }, T("Menu4"))) {
+        *estadoAtual = STATE_EXIT;
+    }
+
+
 }
 
 void StateMenu::CreateMundo(){
@@ -108,51 +120,70 @@ void StateMenu::CreateMundo(){
 }
 
 
-
-void StateMenu::DrawMundosLista(){
-    float Largura_Tela = GetRenderWidth();
-    //float Altura_Tela = GetRenderHeight();
+void StateMenu::DrawMundosLista(float larguraTela, float alturaTela){
     static int listScroll = 0;
     static int listActive = -1;
 
-    static std::string lista;   // persiste entre frames
+    static std::string lista;
     lista = mundosToList(mundos);
-    if (GuiButton((Rectangle){ 20, 20, 140, 30 }, T("Voltar"))) {EstadoMenu = MENU;}
-    GuiListView((Rectangle){ 20, 100, 200, 300 }, lista.c_str(), &listScroll, &listActive);
 
+    // ===== Botão Voltar =====
+    float margem = larguraTela * 0.02f;
+    float botaoLargura = larguraTela * 0.12f;
+    float botaoAltura = alturaTela * 0.045f;
 
-    //-------- Informações do Mundo ------------
-    DrawRectangleRec((Rectangle){ Largura_Tela-250, 50, 245, 300 }, Fade(DARKGRAY, 0.5f));
-    GuiLabel((Rectangle){ Largura_Tela-250, 50, 245, 30 }, T("Informações do Mundo"));
+    if (GuiButton({ margem, margem, botaoLargura, botaoAltura }, T("Voltar"))) {
+        EstadoMenu = MENU;
+    }
 
-    // Botão para entrar
-    if (GuiButton((Rectangle){ Largura_Tela-245, 310, 100, 30 }, T("Entrar"))) {
+    // ===== Lista de mundos =====
+    float listaX = margem;
+    float listaY = margem * 4;
+    float listaLargura = larguraTela * 0.25f;
+    float listaAltura = alturaTela * 0.55f;
+
+    GuiListView({ listaX, listaY, listaLargura, listaAltura },
+                lista.c_str(), &listScroll, &listActive);
+
+    // ===== Painel de informações (direita) =====
+    float painelLargura = larguraTela * 0.28f;
+    float painelAltura = listaAltura;
+    float painelX = larguraTela - painelLargura - margem;
+    float painelY = listaY;
+
+    DrawRectangleRec({ painelX, painelY, painelLargura, painelAltura }, Fade(DARKGRAY, 0.5f));
+    GuiLabel({ painelX, painelY, painelLargura, botaoAltura }, T("Informações do Mundo"));
+
+    // ===== Botões =====
+    float botaoInfoLargura = painelLargura * 0.42f;
+    float botaoInfoAltura = botaoAltura;
+    float espacoBotoes = botaoInfoLargura * 0.1f;
+
+    float botoesY = painelY + painelAltura - botaoInfoAltura - margem;
+
+    if (GuiButton({ painelX + margem, botoesY, botaoInfoLargura, botaoInfoAltura }, T("Entrar"))) {
         if (listActive >= 0 && listActive < (int)mundos.size()) {
             NomeMundo = mundos[listActive].nomeMundo;
             *estadoAtual = STATE_GAME;
         }
-
     }
 
-    if (GuiButton((Rectangle){ Largura_Tela-120, 310, 100, 30 }, T("Deletar"))) {
+    if (GuiButton({ painelX + margem + botaoInfoLargura + espacoBotoes, botoesY, botaoInfoLargura, botaoInfoAltura }, T("Deletar"))) {
         if (listActive >= 0 && listActive < (int)mundos.size()) {
             deletarMundo(&mundos[listActive]);
             carregar_mundos(&mundos);
         }
-
     }
 
-    
-
-    // Informações ao clicar
+    // ===== Informações do mundo selecionado =====
     if (listActive >= 0 && listActive < (int)mundos.size()) {
-        
-        // mundo selecionado:
-        // mundos[listActive].nomeMundo
-        GuiLabel((Rectangle){ Largura_Tela-245, 80, 245, 30 }, mundos[listActive].nomeMundo.c_str());
-        GuiLabel((Rectangle){ Largura_Tela-245, 120, 245, 30 }, mundos[listActive].seed.c_str());
+        float textoY = painelY + botaoAltura * 1.8f;
+
+        GuiLabel({ painelX + margem, textoY, painelLargura - 2*margem, botaoAltura }, mundos[listActive].nomeMundo.c_str());
+        GuiLabel({ painelX + margem, textoY + botaoAltura * 1.4f, painelLargura - 2*margem, botaoAltura }, mundos[listActive].seed.c_str());
     }
 }
+
 
 
 std::string StateMenu::GetNomeMundo(){

@@ -2,26 +2,35 @@
 
 
 
+
+
 void PauseMenu(appstate* currentState, bool *AtivatMenu){
-    float Largura_Tela = GetRenderWidth();
-    float Altura_Tela = GetRenderHeight();
+    float w = GetRenderWidth();
+    float h = GetRenderHeight();
 
-    float recLargura = Largura_Tela - 400;
-    float recAltura  = Altura_Tela - 200;
-    float xrec = (Largura_Tela - recLargura) / 2, yrec = (Altura_Tela - recAltura) / 2;
+    float sx = w / BASE_W;
+    float sy = h / BASE_H;
+    float s = fminf(sx, sy); // mantém proporção
 
-    DrawRectangleRec((Rectangle){ xrec , yrec , recLargura, recAltura }, COR_MESA);
+    float recW = 880 * s;
+    float recH = 520 * s;
+    float x = (w - recW) * 0.5f;
+    float y = (h - recH) * 0.5f;
+
+    DrawRectangleRec({ x, y, recW, recH }, COR_MESA);
 
     GuiSetStyle(DEFAULT, TEXT_ALIGNMENT, TEXT_ALIGN_CENTER);
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 32);
-    GuiSetStyle(DEFAULT, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 32 * s);
+    GuiLabel({ x, y + 30*s, recW, 40*s }, T("Pause Menu"));
 
-    GuiLabel((Rectangle){ xrec, yrec+20, recLargura, 40 }, T("Pause Menu"));
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 20 * s);
 
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
-    if (GuiButton((Rectangle){ (Largura_Tela/2)-70, yrec+70, 140, 30 }, T("Continuar"))) {*AtivatMenu = false;}
-    if (GuiButton((Rectangle){ (Largura_Tela/2)-70, yrec+110, 140, 30 }, T("Menu3"))) {*AtivatMenu = false;}
-    if (GuiButton((Rectangle){ (Largura_Tela/2)-70, yrec+150, 140, 30 }, T("Menu4"))) {*currentState = STATE_MENU;}
+    float bw = 140 * s;
+    float bh = 30 * s;
+    float bx = w * 0.5f - bw * 0.5f;
 
-
+    if (GuiButton({ bx, y + 120*s, bw, bh }, T("Continuar"))) *AtivatMenu = false;
+    if (GuiButton({ bx, y + 170*s, bw, bh }, T("Menu3"))) *AtivatMenu = false;
+    if (GuiButton({ bx, y + 220*s, bw, bh }, T("Menu4"))) *currentState = STATE_MENU;
 }
+

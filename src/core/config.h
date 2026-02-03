@@ -12,6 +12,12 @@
 #define ALTURA_TELA 720
 
 
+#define BASE_W 1280.0f
+#define BASE_H 720.0f
+
+extern float EXEMPLO_VARIAVEL;
+
+
 //#define LARGURA_TELA 1920
 //#define ALTURA_TELA 1080
 

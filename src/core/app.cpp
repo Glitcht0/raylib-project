@@ -37,6 +37,7 @@ void mensagemBox(appstate *currentState){
 
 void principal_loop(){
     appstate currentState = STATE_INIT;
+    float EXEMPLO_VARIAVEL = 1.0;
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
     I18N_Load("resources/lang/pt.json");

@@ -172,8 +172,8 @@ void World::ensureChunkMeshBuilt(int chunkIndex) {
     Chunk& c = chunks[chunkIndex];
 
     if (!c.built && !c.building) {
-        buildQueue.push_back(chunkIndex);
-        c.building = true; // apenas marca como agendado
+        buildQueue.push_back({c.cx, c.cz});
+        c.building = true; 
     }
 }
 
@@ -193,14 +193,25 @@ void World::processUnloadQueue(int maxPerFrame) {
 // ===== Constroi modelos agendados =====
 void World::processBuildQueue(int maxPerFrame) {
     for (int i = 0; i < maxPerFrame && !buildQueue.empty(); i++) {
-        int index = buildQueue.back();
-        buildQueue.pop_back();
+        std::pair<int, int> coords = buildQueue.front();
+        buildQueue.pop_front();
 
-        Chunk& c = chunks[index];
+        // Precisamos encontrar a chunk no vetor agora (pois o índice pode ter mudado)
+        // Isso é uma busca linear, mas como é só 1 ou 2 por frame, não tem impacto na performance
+        Chunk* targetChunk = nullptr;
+        for (auto& c : chunks) {
+            if (c.cx == coords.first && c.cz == coords.second) {
+                targetChunk = &c;
+                break;
+            }
+        }
 
-        buildChunkMesh(c);   // cria Model
-        c.built = true;      // AGORA SIM
-        c.building = false;
+        // Se a chunk ainda existe (não foi descarregada antes de ser construída)
+        if (targetChunk) {
+            buildChunkMesh(*targetChunk);   // cria Model
+            targetChunk->built = true;      
+            targetChunk->building = false;
+        }
     }
 }
 

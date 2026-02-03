@@ -3,6 +3,8 @@
 #include "src/engine/i18n/i18n.h"
 #include "src/core/state_machine.h"
 #include "src/core/config.h"
+#include <cmath>
+
 
 
 

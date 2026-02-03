@@ -137,7 +137,7 @@ private:
     std::vector<int> visibleChunks;    // Índices dos chunks visíveis
     
     std::vector<Model> unloadQueue;    // Modelos para deletar da GPU
-    std::vector<int>   buildQueue;     // Chunks na fila para criar malha
+    std::deque<std::pair<int, int>> buildQueue;     // Chunks na fila para criar malha
 
     // --- Dados Lógicos (Hash Map) ---
     // A chave é um long long (int cx, int cz combinados)
