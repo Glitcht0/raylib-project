@@ -16,7 +16,7 @@ enum MenuState{
 };
 
 void DrawButtonsDemo(void);
-void mensagemBox(appstate *currentState, bool *aviso);
+
 void DrawInputsDemo(void);
 void DrawListsDemo(void);
 void DrawSlidersDemo(void);
@@ -40,7 +40,6 @@ public:
 private:
     std::vector<MundoData> mundos;
     appstate* estadoAtual;
-    bool aviso = false;
     void DrawButtonsMenu();
     void DrawMundosLista();
     void CreateMundo();

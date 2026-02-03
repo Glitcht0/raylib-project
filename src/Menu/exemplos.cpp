@@ -1,10 +1,5 @@
 #include "state_menu.h"
 
-
-
-
-
-
 void DrawButtonsDemo(void){
     static bool checked = false;
 
@@ -20,8 +15,7 @@ void DrawButtonsDemo(void){
 }
 
 
-void DrawInputsDemo(void)
-{
+void DrawInputsDemo(void){
     static int spinnerValue = 5;
     static bool spinnerEdit = false;
 
@@ -44,8 +38,7 @@ void DrawInputsDemo(void)
 }
 
 
-void DrawListsDemo(void)
-{
+void DrawListsDemo(void){
     static int listScroll = 0;
     static int listActive = -1;
 
@@ -63,8 +56,7 @@ void DrawListsDemo(void)
 
 
 
-void DrawSlidersDemo(void)
-{
+void DrawSlidersDemo(void){
     static float slider = 50;
     static float progress = 0.4f;
     static int toggle = 0;
@@ -77,8 +69,7 @@ void DrawSlidersDemo(void)
     GuiToggleSlider((Rectangle){ 30, 340, 200, 30 }, "OFF;ON", &toggle);
 }
 
-void DrawWindowsDemo(void)
-{
+void DrawWindowsDemo(void){
     static bool showMsg = false;
 
     GuiGroupBox((Rectangle){ 340, 260, 300, 160 }, "Windows");

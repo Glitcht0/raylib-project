@@ -12,6 +12,10 @@
 #define ALTURA_TELA 720
 
 
+//#define LARGURA_TELA 1920
+//#define ALTURA_TELA 1080
+
+
 static const int WORLD_W = 200;
 static const int WORLD_H = 200;
 
@@ -20,8 +24,7 @@ static const int TILE_CHUNK_SIZE = 16;
 static const int VIEW_DISTANCE = 5;
 
 
-//#define LARGURA_TELA 1920
-//#define ALTURA_TELA 1080
+
 
 enum class GameMode {
     EDIT,

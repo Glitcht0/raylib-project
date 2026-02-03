@@ -56,9 +56,14 @@ void StateGame::handleInput(){
         
     }
 
+    // tecla esc ativa menu
+    if (IsKeyPressed(KEY_ESCAPE)) {
+        AtivatMenu = !AtivatMenu;
+    }
 
-
+    
 }
+
 
 
 

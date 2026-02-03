@@ -12,6 +12,7 @@
 #include "src/Game/Mundo/mundo.h"
 #include "src/engine/Utils/sistema.h"  
 #include "src/Game/Estruturas/Estruturas.h"
+#include "src/engine/Ui/PauseMenu.h"
 
 #include <string>
 
@@ -34,6 +35,7 @@ public:
     void update(appstate* currentState) override;
     void draw() override;
     Font uiFont;
+    appstate* estadoAtual = nullptr;
 
    
 
@@ -87,6 +89,7 @@ private:
     GameObject* activeObject = nullptr;
     GameObject* selectedObject = nullptr;
     bool lockAxisY = false;
+    bool AtivatMenu = false;
 
     Vector3 startRotation; // rotação inicial do objeto
     bool axisLockActive = false; // se alguma tecla de travamento está sendo usada

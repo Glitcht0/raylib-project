@@ -28,29 +28,27 @@ void StateMenu::draw(){
     ClearBackground(BLACK);
 
     
-    if(aviso){
-        if (EstadoMenu==MENU){
-            DrawButtonsMenu();
-            DrawButtonsDemo();
-            DrawInputsDemo();
-            DrawListsDemo();
-            DrawSlidersDemo();
-            DrawWindowsDemo();
-            DrawButtonsMenu();
-        }
-
-        if (EstadoMenu == CARREGAR){
-            DrawMundosLista();
-        }
-
-        if(EstadoMenu == CRIAR){
-            CreateMundo();
-        }
-        
-    }else{
-        mensagemBox(estadoAtual, &aviso);
-    }
     
+    if (EstadoMenu==MENU){
+        DrawButtonsMenu();
+        /*
+        DrawButtonsDemo();
+        DrawInputsDemo();
+        DrawListsDemo();
+        DrawSlidersDemo();
+        DrawWindowsDemo();*/
+        
+    }
+
+    if (EstadoMenu == CARREGAR){
+        DrawMundosLista();
+    }
+
+    if(EstadoMenu == CRIAR){
+        CreateMundo();
+    }
+        
+  
 
 
     EndDrawing();
@@ -60,7 +58,9 @@ void StateMenu::draw(){
 
 void StateMenu::DrawButtonsMenu(){
     //GuiGroupBox((Rectangle){ 50, 200, 180, 160 }, "Buttons");
-    float Meio_tela = (LARGURA_TELA/2) - 70;
+    float Largura_Tela = GetRenderWidth();
+    //float Altura_Tela = GetRenderHeight();
+    float Meio_tela = (Largura_Tela/2) - 70;
 
     if (GuiButton((Rectangle){ Meio_tela, 300, 140, 30 }, T("Menu1"))) {
         EstadoMenu = CARREGAR;
@@ -75,12 +75,14 @@ void StateMenu::DrawButtonsMenu(){
 }
 
 void StateMenu::CreateMundo(){
+    float Largura_Tela = GetRenderWidth();
+    //float Altura_Tela = GetRenderHeight();
     static char text[64] = "Nome do Mundo";
     static char text2[64] = "Seed";
     static bool textEdit = false;
     static bool textEdit2 = false;
 
-    float Meio = (LARGURA_TELA/2) - (245/2);
+    float Meio = (Largura_Tela/2) - (245/2);
 
 
     DrawRectangleRec((Rectangle){ Meio, 50, 245, 300 }, Fade(DARKGRAY, 0.5f));
@@ -108,6 +110,8 @@ void StateMenu::CreateMundo(){
 
 
 void StateMenu::DrawMundosLista(){
+    float Largura_Tela = GetRenderWidth();
+    //float Altura_Tela = GetRenderHeight();
     static int listScroll = 0;
     static int listActive = -1;
 
@@ -118,11 +122,11 @@ void StateMenu::DrawMundosLista(){
 
 
     //-------- Informações do Mundo ------------
-    DrawRectangleRec((Rectangle){ LARGURA_TELA-250, 50, 245, 300 }, Fade(DARKGRAY, 0.5f));
-    GuiLabel((Rectangle){ LARGURA_TELA-250, 50, 245, 30 }, T("Informações do Mundo"));
+    DrawRectangleRec((Rectangle){ Largura_Tela-250, 50, 245, 300 }, Fade(DARKGRAY, 0.5f));
+    GuiLabel((Rectangle){ Largura_Tela-250, 50, 245, 30 }, T("Informações do Mundo"));
 
     // Botão para entrar
-    if (GuiButton((Rectangle){ LARGURA_TELA-245, 310, 100, 30 }, T("Entrar"))) {
+    if (GuiButton((Rectangle){ Largura_Tela-245, 310, 100, 30 }, T("Entrar"))) {
         if (listActive >= 0 && listActive < (int)mundos.size()) {
             NomeMundo = mundos[listActive].nomeMundo;
             *estadoAtual = STATE_GAME;
@@ -130,7 +134,7 @@ void StateMenu::DrawMundosLista(){
 
     }
 
-    if (GuiButton((Rectangle){ LARGURA_TELA-120, 310, 100, 30 }, T("Deletar"))) {
+    if (GuiButton((Rectangle){ Largura_Tela-120, 310, 100, 30 }, T("Deletar"))) {
         if (listActive >= 0 && listActive < (int)mundos.size()) {
             deletarMundo(&mundos[listActive]);
             carregar_mundos(&mundos);
@@ -145,8 +149,8 @@ void StateMenu::DrawMundosLista(){
         
         // mundo selecionado:
         // mundos[listActive].nomeMundo
-        GuiLabel((Rectangle){ LARGURA_TELA-245, 80, 245, 30 }, mundos[listActive].nomeMundo.c_str());
-        GuiLabel((Rectangle){ LARGURA_TELA-245, 120, 245, 30 }, mundos[listActive].seed.c_str());
+        GuiLabel((Rectangle){ Largura_Tela-245, 80, 245, 30 }, mundos[listActive].nomeMundo.c_str());
+        GuiLabel((Rectangle){ Largura_Tela-245, 120, 245, 30 }, mundos[listActive].seed.c_str());
     }
 }
 
@@ -158,20 +162,6 @@ std::string StateMenu::GetNomeMundo(){
 
 
 
-void mensagemBox(appstate *currentState, bool *aviso){
-    
-    float boxWidth = 350, boxHeight = 200;
-
-    Rectangle box = { (LARGURA_TELA - boxWidth) / 2.0f , (ALTURA_TELA  - boxHeight) / 2.0f, boxWidth, boxHeight };
-
-    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
-
-     
-    int result = GuiMessageBox( box, T("MSG_TITLE"),T("MSG_BODY"), T("BTN_AVISO") );
-
-    if (result >= 0)
-        *aviso = true;
-}
 
 
 

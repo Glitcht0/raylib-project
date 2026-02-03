@@ -38,7 +38,7 @@ O mundo do jogo é gerado proceduralmente usando o algoritmo de Perlin Noise par
 #### - dar comit
 ```
 git add .
-git commit -m "Geração Varias Ilhas"
+git commit -m "Ui"
 git push -u origin main     
 ```
 

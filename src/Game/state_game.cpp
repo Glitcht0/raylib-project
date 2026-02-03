@@ -19,6 +19,8 @@ StateGame::StateGame(std::string nomeM) : world(nomeM)  {
     
 }
 
+
+
 // =============================================
 //         Executa ao ao entrar no estado
 // =============================================
@@ -56,11 +58,14 @@ void StateGame::onEnter() {
 
 }
 
+
 StateGame::~StateGame() {
     if (playerObj != nullptr) {
         onExit();
     }
 }
+
+
 
 // =============================================
 //         Executa ao ao Sair no estado
@@ -93,7 +98,6 @@ void StateGame::onExit() {
 //         🗿 Atualiza a câmera, objetos, controles...
 // ===============================================================
 void StateGame::update(appstate* currentState) {
-
     // -------------------- Controles edit viewport --------------------
     Vector2 delta = GetMouseDelta();
 
@@ -111,11 +115,6 @@ void StateGame::update(appstate* currentState) {
     
     handleInput(); // Entrada de teclado para mudar modos e selecionar objetos aqui aonde vai ficar a ações dos botões
     updateAll();
-    
-
-
-
-
 }
 
 
@@ -183,20 +182,16 @@ void StateGame::draw() {
 
     DrawText(IsWindowState(FLAG_VSYNC_HINT) ? "VSync: ON" : "VSync: OFF", 10, 190, 20, GREEN);
 
-
-
-
-
-
     mesaEd->draw(selectedObject, transformMode, uiFont);
 
 
+    if(AtivatMenu){
+        PauseMenu(estadoAtual, &AtivatMenu);
+    }
     
 
+
     EndDrawing();
-
-
-
 }
 
 

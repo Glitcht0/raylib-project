@@ -1,71 +1,69 @@
 #include "Data.h"
 
+bool nomeValido(const std::string& s){
+    if (s.empty()) return false;
+    if (s.find("..") != std::string::npos) return false;
+    if (s.find('/') != std::string::npos || s.find('\\') != std::string::npos) return false;
+    return true;
+}
 
-
-void carregar_mundos(std::vector<MundoData> *mundos)
-{
+void carregar_mundos(std::vector<MundoData>* mundos){
     mundos->clear();
+    std::filesystem::path base = "saves";
+    if (!std::filesystem::exists(base)) return;
 
-    const std::string pasta = "saves";
+    for (auto& entry : std::filesystem::directory_iterator(base)){
+        if (!entry.is_directory()) continue;
 
-    if (!std::filesystem::exists(pasta)) return;
+        std::string nome = entry.path().filename().string();
+        if (!nomeValido(nome)) continue;
 
-    for (const auto& entry : std::filesystem::directory_iterator(pasta))
-    {
-        if (entry.is_directory())
-        {
-            MundoData m;
-            m.nomeMundo = entry.path().filename().string();
-            m.seed = ""; // ainda nao existe
+        MundoData m;
+        m.nomeMundo = nome;
 
-            std::ifstream file(entry.path().string() + "/world.dat", std::ios::binary);
-            if (file){
-                size_t len;
-                file.read((char*)&len, sizeof(size_t));
-                m.nomeMundo.resize(len);
-                file.read(&m.nomeMundo[0], len);
+        std::ifstream file(entry.path() / "world.dat", std::ios::binary);
+        if (!file) continue;
 
-                file.read((char*)&len, sizeof(size_t));
-                m.seed.resize(len);
-                file.read(&m.seed[0], len);
-            }
+        size_t len;
 
-            mundos->push_back(m);
-        }
+        file.read((char*)&len, sizeof(size_t));
+        if (len > 256) continue;
+        m.nomeMundo.resize(len);
+        file.read(&m.nomeMundo[0], len);
+
+        file.read((char*)&len, sizeof(size_t));
+        if (len > 256) continue;
+        m.seed.resize(len);
+        file.read(&m.seed[0], len);
+
+        mundos->push_back(m);
     }
 }
 
+void criar_mundo(MundoData* mundo){
+    if (!nomeValido(mundo->nomeMundo)) return;
 
-void deletarMundo(MundoData *mundo){
-    const std::string pasta = "saves/" + mundo->nomeMundo;
-
-    if (std::filesystem::exists(pasta)) {
-        std::filesystem::remove_all(pasta);
-    }
-}
-
-void criar_mundo(MundoData *mundo){
-    const std::string pastaMundo = "saves/" + mundo->nomeMundo;
-
+    std::filesystem::path pastaMundo = std::filesystem::path("saves") / mundo->nomeMundo;
     std::filesystem::create_directories(pastaMundo);
 
-    // arquivo binário
-    std::ofstream file(pastaMundo + "/world.dat", std::ios::binary);
+    std::ofstream file(pastaMundo / "world.dat", std::ios::binary);
     if (!file) return;
 
-    //Mede o tamanho
-    size_t lenNome = mundo->nomeMundo.size();
-    size_t lenSeed = mundo->seed.size();
+    size_t len = mundo->nomeMundo.size();
+    file.write((char*)&len, sizeof(size_t));
+    file.write(mundo->nomeMundo.data(), len);
 
-    
-    file.write((char*)&lenNome, sizeof(size_t));
-    file.write(mundo->nomeMundo.c_str(), lenNome);
+    len = mundo->seed.size();
+    file.write((char*)&len, sizeof(size_t));
+    file.write(mundo->seed.data(), len);
+}
 
-    file.write((char*)&lenSeed, sizeof(size_t));
-    file.write(mundo->seed.c_str(), lenSeed);
+void deletarMundo(MundoData* mundo){
+    if (!nomeValido(mundo->nomeMundo)) return;
 
-    file.close();
-
+    std::filesystem::path pasta = std::filesystem::path("saves") / mundo->nomeMundo;
+    if (std::filesystem::exists(pasta))
+        std::filesystem::remove_all(pasta);
 }
 
 

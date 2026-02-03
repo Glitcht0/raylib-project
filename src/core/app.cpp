@@ -13,19 +13,38 @@
 #include "resources/style/style_amber.h"
 
 
+void mensagemBox(appstate *currentState){
+    float Largura_Tela = GetRenderWidth();
+    float Altura_Tela = GetRenderHeight();
+
+    BeginDrawing();
+    ClearBackground(BLACK);
+
+    float boxWidth = 350, boxHeight = 200;
+    Rectangle box = {  (Largura_Tela - boxWidth) / 2.0f, (Altura_Tela  - boxHeight) / 2.0f, boxWidth, boxHeight  };
+
+    GuiSetStyle(DEFAULT, TEXT_SIZE, 20);
+    int result = GuiMessageBox(box, T("MSG_TITLE"), T("MSG_BODY"), T("BTN_AVISO"));
+
+    EndDrawing();
+
+    if (result >= 0)
+        *currentState = STATE_MENU;
+}
+
+
 
 
 void principal_loop(){
-    appstate currentState = STATE_MENU;
-    SetConfigFlags(FLAG_MSAA_4X_HINT);
-    SetConfigFlags(FLAG_VSYNC_HINT);
+    appstate currentState = STATE_INIT;
+    SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
     I18N_Load("resources/lang/pt.json");
 
 
   
 
-
+    
     InitWindow(LARGURA_TELA, ALTURA_TELA, "Raylib 3D - Exemplo simples");
     SetExitKey(KEY_NULL);
 
@@ -45,12 +64,17 @@ void principal_loop(){
     StateGame *gameState = nullptr;
     StateMenu menuState;
 
+
     
     bool stateEntered = false; // flag para controlar onEnter
 
     while (!WindowShouldClose() && currentState != STATE_EXIT){
         switch (currentState)
         {
+            case STATE_INIT:
+                mensagemBox(&currentState);
+                break;
+
             case STATE_MENU:
 
 
@@ -83,6 +107,7 @@ void principal_loop(){
                         gameState = new StateGame(nomeMundo);
                     }
                     gameState->onEnter(); // entra no estado apenas uma vez
+                    gameState->estadoAtual = &currentState;
                     stateEntered = true;
                 }
 
@@ -100,6 +125,9 @@ void principal_loop(){
             default:
                 break;
         }
+
+        //Tela cheia
+        if (IsKeyPressed(KEY_F11) || (IsKeyDown(KEY_LEFT_ALT) && IsKeyPressed(KEY_ENTER))) {ToggleFullscreen();}
 
     }
 
