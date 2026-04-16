@@ -2,6 +2,8 @@
 Este repositório contém um projeto de jogo simples desenvolvido usando a biblioteca Raylib em C++. O projeto é voltado ao teste de funcionalidades básicas de Raylib para a construção de jogos 2D e 3D.
 O projeto é totalmente orientado a Obejtos.
 
+mingw32-make
+.\game.exe
 
 # ⚙️ Diagramas
 ## diagrama de classe base
@@ -38,7 +40,7 @@ O mundo do jogo é gerado proceduralmente usando o algoritmo de Perlin Noise par
 #### - dar comit
 ```
 git add .
-git commit -m "Janela"
+git commit -m "Ui flexivel e bug chunk"
 git push -u origin main     
 ```
 
