@@ -368,8 +368,13 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst 
 SRC_DIR = src
 OBJ_DIR = obj
 
+# Todas as fontes do projeto, incluindo subpastas
+SRC = $(call rwildcard,Engine/,*.cpp) \
+      $(call rwildcard,Projects/TheGame,*.cpp) 
+      #$(call rwildcard,Projects/RoboCup,*.cpp) 
+      
+      #$(call rwildcard,src/,*.cpp) 
 
-SRC = $(call rwildcard,src/,*.cpp)
 
 # Define all object files from source files
 #SRC = $(wildcard src/*.cpp) \

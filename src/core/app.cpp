@@ -2,6 +2,7 @@
 #include "raylib.h"
 #include "src/Game/state_game.h"
 #include "src/Menu/state_menu.h"
+
 #include "src/engine/i18n/i18n.h"
 
 #define RLIGHTS_IMPLEMENTATION
@@ -29,7 +30,7 @@ void mensagemBox(appstate *currentState){
     EndDrawing();
 
     if (result >= 0)
-        *currentState = STATE_MENU;
+        *currentState = STATE_MENU; //STATE_MENU;
 }
 
 
@@ -37,7 +38,7 @@ void mensagemBox(appstate *currentState){
 
 void principal_loop(){
     appstate currentState = STATE_INIT;
-    float EXEMPLO_VARIAVEL = 1.0;
+    //float EXEMPLO_VARIAVEL = 1.0;
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE);
 
     I18N_Load("resources/lang/pt.json");
@@ -72,6 +73,8 @@ void principal_loop(){
     while (!WindowShouldClose() && currentState != STATE_EXIT){
         switch (currentState)
         {
+            
+
             case STATE_INIT:
                 mensagemBox(&currentState);
                 break;

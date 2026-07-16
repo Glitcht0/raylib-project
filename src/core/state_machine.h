@@ -6,7 +6,8 @@ enum appstate {
     STATE_MENU,
     STATE_CONFIG,
     STATE_GAME,
-    STATE_EXIT
+    STATE_EXIT,
+    STATE_ROBOCUP
 };
 
 

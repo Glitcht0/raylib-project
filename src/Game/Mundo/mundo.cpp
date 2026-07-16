@@ -13,7 +13,7 @@ World::World(std::string nomeM): perlin(time(nullptr)) {
 }
 
 World::~World() {
-    // 1. Salvar tudo antes de sair (opcional, mas recomendado)
+    // 1. Salvar tudo antes de sair 
     for (auto& pair : chunkData) {
         saveChunkToDisk(pair.second);
     }
