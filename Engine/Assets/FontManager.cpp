@@ -6,6 +6,6 @@ Font LoadFont() {
     for (int i = 32; i < 256; i++)
         codepoints[i - 32] = i;
 
-    return LoadFontEx( "resources/fonts/arial.ttf", 48, codepoints, 256 - 32 );
+    return LoadFontEx( "Engine/resources/fonts/arial.ttf", 48, codepoints, 256 - 32 );
 }
 

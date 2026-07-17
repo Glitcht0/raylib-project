@@ -6,7 +6,8 @@ class StateMachine;
     🧬 Classe base para todos os estados do jogo. Qualquer estado,
     seja de menu, jogo, configuração, deve herdar esta classe e implementar
     os métodos virtuais puros `update()` e `draw()`. Além do `onEnter()` e `onExit()`.
-    Mudança de estado com qualquer herdeiro de State: `ChangeState(new StatePróximo());`
+    Mudança de estado com qualquer herdeiro de State: `ChangeState(new StatePróximo());` 
+    ou `ChangeState(nullptr);` para sair do loop principal da Engine.
 
     Classe Estado
  ===================================================================*/

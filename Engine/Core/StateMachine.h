@@ -16,6 +16,7 @@ public:
 
     void Update();
     void Draw();
+    bool IsRunning() const { return current != nullptr; }
 
 private:
     State* current = nullptr;

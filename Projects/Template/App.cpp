@@ -10,7 +10,7 @@
 
 #define RAYGUI_IMPLEMENTATION
 #include "libs/raygui.h"
-#include "resources/style/style_amber.h"
+#include "Engine/resources/style/style_amber.h"
 #include "Engine/Assets/FontManager.h"
 
 #include "Engine/i18n/i18n.h"

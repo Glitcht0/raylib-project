@@ -10,7 +10,7 @@ StateMachine& GetStateMachine(){
 }
 
 void EngineRun(){
-    while (!WindowShouldClose()){
+    while (!WindowShouldClose() && machine.IsRunning()){
         machine.Update();
         machine.Draw();
 
