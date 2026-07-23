@@ -1,4 +1,4 @@
-#define WIN32_LEAN_AND_MEAN
+//#define WIN32_LEAN_AND_MEAN Eu tirei porque defini no cpp
 
 #include <windows.h>
 #include <psapi.h>

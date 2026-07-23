@@ -5,7 +5,8 @@
             "includePath": [
                 "C:/raylib/raylib/src/**",
                 "${workspaceFolder}/**",
-                "${workspaceFolder}/src/core/**"
+                "${workspaceFolder}/src/core/**",
+                "${workspaceFolder}/libs"
             ],
             "forcedInclude": [
                 "${workspaceFolder}/src/core/config.h"
@@ -15,7 +16,12 @@
                 "UNICODE",
                 "_UNICODE",
                 "GRAPHICS_API_OPENGL_33",
-                "PLATFORM_DESKTOP"
+                "PLATFORM_DESKTOP",
+                "ASIO_STANDALONE", 
+                "WIN32_LEAN_AND_MEAN",
+                "NOGDI",
+                "NOUSER",
+                "_WIN32_WINNT=0x0601"
             ],
             "compilerPath": "C:/raylib/w64devkit/bin/gcc.exe",
             "cStandard": "c99",
@@ -27,6 +33,7 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceFolder}/**",
+                "${workspaceFolder}/libs/**",
                 "/opt/homebrew/include"
             ],
             "defines": [
@@ -48,6 +55,7 @@
             "name": "Linux",
             "includePath": [
                 "/home/linuxbrew/.linuxbrew/include",
+                "${workspaceFolder}/libs/**",
                 "${workspaceFolder}/**"
             ],
             "defines": [

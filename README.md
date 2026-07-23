@@ -220,3 +220,11 @@ por:
 "*.hxx": "$(capture).cc, $(capture).cpp, $(capture).cxx",
 
 ```
+
+### Include Path
+
+```plaintext
+${workspaceFolder}/**
+C:/raylib/raylib/src
+${workspaceFolder}/../../
+```

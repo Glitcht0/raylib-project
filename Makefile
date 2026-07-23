@@ -194,7 +194,7 @@ endif
 #  -std=gnu99           defines C language mode (GNU C from 1999 revision)
 #  -Wno-missing-braces  ignore invalid warning (GCC bug 53119)
 #  -D_DEFAULT_SOURCE    use with -std=c99 on Linux and PLATFORM_WEB, required for timespec
-CFLAGS += -Wall -std=c++17 -D_DEFAULT_SOURCE -Wno-missing-braces
+CFLAGS += -Wall -std=c++17 -D_DEFAULT_SOURCE -Wno-missing-braces -DASIO_STANDALONE
 
 
 ifeq ($(BUILD_MODE),DEBUG)
@@ -210,6 +210,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
         # resource file contains windows executable icon and properties
         # -Wl,--subsystem,windows hides the console window
         CFLAGS += $(RAYLIB_PATH)/src/raylib.rc.data
+        CFLAGS += -DWIN32_LEAN_AND_MEAN -DNOGDI -DNOUSER -D_WIN32_WINNT=0x0601
     endif
     ifeq ($(PLATFORM_OS),LINUX)
         ifeq ($(RAYLIB_LIBTYPE),STATIC)
@@ -251,9 +252,9 @@ endif
 
 # Define include paths for required headers
 # NOTE: Several external required libraries (stb and others)
-INCLUDE_PATHS = -I. -I$(RAYLIB_PATH)/src -I$(RAYLIB_PATH)/src/external
+INCLUDE_PATHS = -I. -I$(RAYLIB_PATH)/src -I$(RAYLIB_PATH)/src/external -Ilibs
 ifneq ($(wildcard /opt/homebrew/include/.*),)
-    INCLUDE_PATHS += -I/opt/homebrew/include
+    INCLUDE_PATHS += -I/opt/homebrew/include 
 endif
 
 # Define additional directories containing required header files
@@ -310,7 +311,7 @@ ifeq ($(PLATFORM),PLATFORM_DESKTOP)
     ifeq ($(PLATFORM_OS),WINDOWS)
         # Libraries for Windows desktop compilation
         # NOTE: WinMM library required to set high-res timer resolution
-        LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm
+        LDLIBS = -lraylib -lopengl32 -lgdi32 -lwinmm -lws2_32
         # Required for physac examples
         #LDLIBS += -static -lpthread
     endif
@@ -368,10 +369,15 @@ rwildcard=$(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2) $(filter $(subst 
 SRC_DIR = src
 OBJ_DIR = obj
 
+# Pega todos os .cpp do projeto RoboCup
+ALL_ROBOCUP_SRC = $(call rwildcard,Projects/RoboCup,*.cpp)
+
+
 # Todas as fontes do projeto, incluindo subpastas
 SRC = $(call rwildcard,Engine/,*.cpp) \
-      $(call rwildcard,Projects/TheGame,*.cpp) 
-      #$(call rwildcard,Projects/RoboCup,*.cpp) 
+      $(filter-out Projects/RoboCup/main/%, $(ALL_ROBOCUP_SRC))
+      #$(call rwildcard,Projects/TheGame,*.cpp) 
+      
       
       #$(call rwildcard,src/,*.cpp) 
 
