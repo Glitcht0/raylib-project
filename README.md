@@ -18,8 +18,28 @@ O mundo do jogo é gerado proceduralmente usando o algoritmo de Perlin Noise par
 
 ![Terrain Generation](assets/exemples/geracaoMundo2.png)
 
-# Como isntalar e rodar o projeto
-
+# Como isntalar e rodar o projeto`
+```bash
+sudo apt update
+sudo apt install build-essential git \
+libasound2-dev \
+libx11-dev \
+libxrandr-dev \
+libxi-dev \
+libgl1-mesa-dev \
+libglu1-mesa-dev \
+libxcursor-dev \
+libxinerama-dev \
+libwayland-dev \
+libxkbcommon-dev  
+  
+  
+git clone --depth 1 https://github.com/raysan5/raylib.git
+cd raylib/src
+make PLATFORM=PLATFORM_DESKTOP
+sudo make install
+sudo ldconfig
+```
 🎥 [Video Tutorial on YouTube](https://www.youtube.com/watch?v=PaAcVk5jUd8)
 
 ## 🐈‍⬛Comandos do repositorio
