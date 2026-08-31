@@ -3,8 +3,8 @@
 
 
 
-void State::ChangeState(State* next) {
+void State::ChangeState(StateID next, std::shared_ptr<StateParams> params) {
     if (machine) {
-        machine->ChangeState(next);
+        machine->ChangeState(next, params);
     }
 }

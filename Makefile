@@ -375,7 +375,8 @@ ALL_ROBOCUP_SRC = $(call rwildcard,Projects/RoboCup,*.cpp)
 
 # Todas as fontes do projeto, incluindo subpastas
 SRC = $(call rwildcard,Engine/,*.cpp) \
-      $(filter-out Projects/RoboCup/main/%, $(ALL_ROBOCUP_SRC))
+      $(call rwildcard,Projects/TheGame,*.cpp)
+      #$(filter-out Projects/RoboCup/main/%, $(ALL_ROBOCUP_SRC))
       #$(call rwildcard,Projects/TheGame,*.cpp) 
       
       

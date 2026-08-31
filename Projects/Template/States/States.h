@@ -7,17 +7,15 @@
 #include "Engine/Core/State.h"
 
 /** ======================================================
- *  📝 Templete de Estados do Programa
- *  
- * ======================================================
- */
-
+ *  📝 TEMPLATE DE ESTADO
+ *  Todo estado deve herdar de 'State' e implementar os 4 métodos principais.
+ * ====================================================== */
 class State1 : public State {
 public:
 
     State1();
     ~State1();
-    void onEnter() override;
+    void onEnter(std::shared_ptr<StateParams> params = nullptr) override;
     void onExit() override;
 
     void update() override;
@@ -35,7 +33,7 @@ public:
 
     State2();
     ~State2();
-    void onEnter() override;
+    void onEnter(std::shared_ptr<StateParams> params = nullptr) override;
     void onExit() override;
 
     void update() override;

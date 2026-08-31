@@ -19,27 +19,25 @@
     📝 Templete da Função Principal do Programa
 
 ====================================================== */ 
-int main2(){
-    
+int main(){ // Renomeado de main2 para main
     SetConfigFlags(FLAG_MSAA_4X_HINT | FLAG_VSYNC_HINT | FLAG_WINDOW_RESIZABLE); 
-
-    I18N_Load_File("Projects/Template/Assets/lang/pt.json"); // Arquivo de textos
-    
-    InitWindow(LARGURA_TELA, ALTURA_TELA, "Raylib 3D - RoboCup");
-    SetExitKey(KEY_NULL);
-
+    I18N_Load_File("Projects/Template/Assets/lang/pt.json"); 
+    InitWindow(LARGURA_TELA, ALTURA_TELA, "Raylib 3D - Template");
     SetTargetFPS(60);
-    GuiLoadStyleAmber();
+    // ... Carregamento de fontes[cite: 18]
 
-    Font uiFont = LoadFont();
-    SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR); // Suaviza a fonte
-    GuiSetFont(uiFont);
+    // ⚙️ TUTORIAL: REGISTRO DE ESTADOS (A FÁBRICA)
+    // Antes de rodar, ensinamos a Engine a criar as telas do jogo.
+    StateMachine& sm = GetStateMachine();
+    sm.RegisterState<State1>(StateID::State1);
+    sm.RegisterState<State2>(StateID::State2);
 
-    
+    // 🎮 Inicia o jogo na tela principal
+    sm.ChangeState(StateID::State1);
 
-    GetStateMachine().ChangeState(new State1()); // Muda para o estado de menu inicial
+    // 🚂 Roda o Loop da Engine (Delega o controle)
+    EngineRun(); 
 
-    EngineRun(); // Inicia o loop principal da Engine
     return 0;
 }
 

@@ -1,6 +1,9 @@
 #pragma once
 
 #include "State.h"
+#include <map>
+#include <functional>
+#include <memory>
 
 
 /**===================================================================
@@ -10,9 +13,15 @@
     
     Classe de gerenciamento de estado
  ===================================================================*/
-class StateMachine{
+class StateMachine {
 public:
-    void ChangeState(State* novo);
+    // Método de registro de estado que a main() vai usar para ensinar a engine os estados existentes
+    template <typename T>
+    void RegisterState(StateID id) {
+        factory[id] = []() { return new T(); };
+    }
+
+    void ChangeState(StateID id, std::shared_ptr<StateParams> params = nullptr);
 
     void Update();
     void Draw();
@@ -20,4 +29,5 @@ public:
 
 private:
     State* current = nullptr;
+    std::map<StateID, std::function<State*()>> factory;
 };

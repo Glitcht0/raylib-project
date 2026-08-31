@@ -1,6 +1,29 @@
 #pragma once
+#include <memory>
+#include <string>
 
 class StateMachine;
+
+
+enum class StateID {
+    None,
+    Exit, // Para substituir o ChangeState(nullptr)
+    Menu,
+    Game,
+    State1,
+    State2,
+};
+
+// Estrutura base vazia
+struct StateParams {
+    virtual ~StateParams() = default;
+};
+
+// O pacote específico que o Menu vai enviar para o Jogo
+struct GameParams : public StateParams {
+    std::string parametro;
+};
+
 
 /**===================================================================
     🧬 Classe base para todos os estados do jogo. Qualquer estado,
@@ -14,16 +37,14 @@ class StateMachine;
 class State {
 protected:
     StateMachine* machine = nullptr;
-    void ChangeState(State* next);
+    void ChangeState(StateID next, std::shared_ptr<StateParams> params = nullptr);
 
 public:
     virtual ~State() = default;
 
-    void SetMachine(StateMachine* m){
-        machine = m;
-    }
+    void SetMachine(StateMachine* m){ machine = m; }
 
-    virtual void onEnter() {}
+    virtual void onEnter(std::shared_ptr<StateParams> params = nullptr) {}
     virtual void onExit() {}
 
     virtual void update() = 0;

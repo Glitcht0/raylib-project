@@ -1,28 +1,23 @@
 #include "States.h"
 
-State1::State1()
-{
+State1::State1(){
 }
 
-State1::~State1()
-{
+State1::~State1(){
 }
 
-void State1::onEnter()
-{
+void State1::onEnter(std::shared_ptr<StateParams> params) {
+    // 💡 TUTORIAL: Extraia seus parâmetros aqui, se houver!
 }
 
-void State1::onExit()
-{
+void State1::onExit(){
 }
 
-void State1::update()
-{
+void State1::update(){
     
 }
 
-void State1::draw()
-{
+void State1::draw(){
     BeginDrawing();
     ClearBackground(BLACK);
 
@@ -40,10 +35,10 @@ void State1::draw()
     float y0 = 300 * s;
     float dy = 40 * s;
     if (GuiButton({ x, y0 + 1*dy, btnW, btnH }, T("Menu2"))) {
-        ChangeState(new State2());
+        ChangeState(StateID::State2);
     }
     if (GuiButton({ x, y0 + 2*dy, btnW, btnH }, T("Menu3"))) {
-        ChangeState(new State2());
+        ChangeState(StateID::State2);
     }
 
     
