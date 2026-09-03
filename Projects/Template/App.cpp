@@ -24,7 +24,12 @@ int main(){ // Renomeado de main2 para main
     I18N_Load_File("Projects/Template/Assets/lang/pt.json"); 
     InitWindow(LARGURA_TELA, ALTURA_TELA, "Raylib 3D - Template");
     SetTargetFPS(60);
-    // ... Carregamento de fontes[cite: 18]
+    GuiLoadStyleAmber();
+
+    Font uiFont = LoadFont();
+    SetTextureFilter(uiFont.texture, TEXTURE_FILTER_BILINEAR); // Suaviza a fonte
+    GuiSetFont(uiFont);
+    
 
     // ⚙️ TUTORIAL: REGISTRO DE ESTADOS (A FÁBRICA)
     // Antes de rodar, ensinamos a Engine a criar as telas do jogo.
