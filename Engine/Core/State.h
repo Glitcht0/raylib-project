@@ -12,6 +12,7 @@ enum class StateID {
     Game,
     State1,
     State2,
+    State3,
 };
 
 // Estrutura base vazia
